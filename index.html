@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>benapps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Courier+Prime&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --fg: #efefef;
+      --muted: #505050;
+      --rule: #2a2a2a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem 2rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .inner {
+      max-width: 480px;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(4rem, 16vw, 7rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.2rem;
+    }
+
+    .rule {
+      height: 1px;
+      background: var(--rule);
+      margin-bottom: 2.5rem;
+    }
+
+    .app-list {
+      list-style: none;
+    }
+
+    .app-list li {
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .app-list a {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.9rem 0;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+
+    .app-list a:hover {
+      color: var(--muted);
+    }
+
+    .app-list a:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    .app-name {
+      letter-spacing: 0.05em;
+    }
+
+    .arrow {
+      display: inline-block;
+      transition: transform 0.15s;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="inner">
+    <h1>ben<br>apps</h1>
+    <div class="rule"></div>
+    <ul class="app-list">
+      <li>
+        <a href="/list/">
+          <span class="app-name">list</span>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+      <!-- add more apps here -->
+    </ul>
+  </div>
+</body>
+</html>
