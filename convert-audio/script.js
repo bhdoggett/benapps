@@ -8,8 +8,9 @@ const statusMsg      = document.getElementById('status-msg');
 const errorMsg       = document.getElementById('error-msg');
 const resetBtn       = document.getElementById('reset-btn');
 
-let currentFile = null;
-let audioBuffer = null;
+let currentFile   = null;
+let audioBuffer   = null; // original
+let workingBuffer = null; // with transforms applied
 
 // ---- Load file ----
 
@@ -53,10 +54,10 @@ function loadFile(file) {
 
   const ctx = new AudioContext();
   file.arrayBuffer().then(buf => ctx.decodeAudioData(buf)).then(decoded => {
-    audioBuffer = decoded;
-    const mins = Math.floor(decoded.duration / 60);
-    const secs = Math.floor(decoded.duration % 60).toString().padStart(2, '0');
-    fileInfo.textContent = `${file.name}  ·  ${mins}:${secs}  ·  ${decoded.numberOfChannels === 1 ? 'mono' : 'stereo'}  ·  ${Math.round(decoded.sampleRate / 1000)}kHz`;
+    audioBuffer = workingBuffer = decoded;
+    updateFileInfo(decoded);
+    appliedTransforms = [];
+    syncApplyBtn();
     hideError();
     hideStatus();
     audioPlayer.classList.remove('hidden');
@@ -80,7 +81,7 @@ document.querySelectorAll('.convert-btn').forEach(btn => {
 
     setTimeout(() => {
       try {
-        const blob = format === 'mp3' ? encodeMP3(audioBuffer) : encodeWAV(audioBuffer);
+        const blob = format === 'mp3' ? encodeMP3(workingBuffer) : encodeWAV(workingBuffer);
         download(blob, `${name}.${format}`);
       } catch (e) {
         showError('encoding failed');
@@ -91,6 +92,190 @@ document.querySelectorAll('.convert-btn').forEach(btn => {
     }, 500);
   });
 });
+
+// ---- Transforms ----
+
+const resetTransformBtn  = document.getElementById('reset-transform-btn');
+const applyTransformsBtn = document.getElementById('apply-transforms-btn');
+
+// Non-speed toggles
+let selectedTransforms = [];
+
+// Speed button cycle state: 0=off, 1=first, 2=second
+const speedCycles = {
+  half:   { labels: ['½×', '¼×'], factors: [0.5, 0.25] },
+  double: { labels: ['2×',  '4×'], factors: [2,   4]   },
+};
+const speedState = { half: 0, double: 0 };
+
+// Last-applied snapshot for headphones comparison
+let appliedSnapshot = '';
+
+function effectiveTransforms() {
+  const all = [...selectedTransforms];
+  for (const [group, state] of Object.entries(speedState)) {
+    if (state > 0) all.push(`${group}:${state}`);
+  }
+  return all.sort().join(',');
+}
+
+function syncApplyBtn() {
+  applyTransformsBtn.classList.toggle('has-changes', effectiveTransforms() !== appliedSnapshot);
+}
+
+function resetSpeedBtn(group) {
+  speedState[group] = 0;
+  const btn = document.querySelector(`[data-speed-group="${group}"]`);
+  btn.textContent = speedCycles[group].labels[0];
+  btn.classList.remove('selected');
+}
+
+// Speed buttons — cycle through states
+document.querySelectorAll('.transform-btn[data-speed-group]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!audioBuffer) return;
+    const group = btn.dataset.speedGroup;
+    const opposite = group === 'half' ? 'double' : 'half';
+
+    // Deselect opposite
+    if (speedState[opposite] > 0) resetSpeedBtn(opposite);
+
+    // Advance cycle: 0→1→2→0
+    speedState[group] = (speedState[group] + 1) % 3;
+    if (speedState[group] === 0) {
+      btn.textContent = speedCycles[group].labels[0];
+      btn.classList.remove('selected');
+    } else {
+      btn.textContent = speedCycles[group].labels[speedState[group] - 1];
+      btn.classList.add('selected');
+    }
+    syncApplyBtn();
+  });
+});
+
+// Non-speed buttons — simple toggle
+document.querySelectorAll('.transform-btn[data-action]:not([data-speed-group])').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!audioBuffer) return;
+    const action = btn.dataset.action;
+    const idx = selectedTransforms.indexOf(action);
+    if (idx !== -1) {
+      selectedTransforms.splice(idx, 1);
+      btn.classList.remove('selected');
+    } else {
+      selectedTransforms.push(action);
+      btn.classList.add('selected');
+    }
+    syncApplyBtn();
+  });
+});
+
+applyTransformsBtn.addEventListener('click', () => {
+  if (!audioBuffer) return;
+  setButtons(true);
+  audioPlayer.classList.add('hidden');
+  showStatus('loading');
+
+  setTimeout(() => {
+    workingBuffer = audioBuffer;
+    for (const action of selectedTransforms) {
+      if      (action === 'reverse')   workingBuffer = transformReverse(workingBuffer);
+      else if (action === 'mono')      workingBuffer = transformMono(workingBuffer);
+      else if (action === 'normalize') workingBuffer = transformNormalize(workingBuffer);
+    }
+    for (const [group, state] of Object.entries(speedState)) {
+      if (state > 0) workingBuffer = transformSpeed(workingBuffer, speedCycles[group].factors[state - 1]);
+    }
+    appliedSnapshot = effectiveTransforms();
+    syncApplyBtn();
+    updatePlayer(workingBuffer);
+    updateFileInfo(workingBuffer);
+    hideStatus();
+    audioPlayer.classList.remove('hidden');
+    setButtons(false);
+    const anySelected = selectedTransforms.length > 0 || Object.values(speedState).some(s => s > 0);
+    resetTransformBtn.classList.toggle('hidden', !anySelected);
+  }, 300);
+});
+
+resetTransformBtn.addEventListener('click', () => {
+  workingBuffer    = audioBuffer;
+  selectedTransforms = [];
+  appliedSnapshot    = '';
+  resetSpeedBtn('half');
+  resetSpeedBtn('double');
+  document.querySelectorAll('.transform-btn:not([data-speed-group])').forEach(b => b.classList.remove('selected'));
+  syncApplyBtn();
+  updatePlayer(workingBuffer);
+  updateFileInfo(workingBuffer);
+  resetTransformBtn.classList.add('hidden');
+});
+
+function transformReverse(buf) {
+  const out = new AudioBuffer({ numberOfChannels: buf.numberOfChannels, length: buf.length, sampleRate: buf.sampleRate });
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const input = buf.getChannelData(c);
+    const output = out.getChannelData(c);
+    for (let i = 0; i < buf.length; i++) output[i] = input[buf.length - 1 - i];
+  }
+  return out;
+}
+
+function transformSpeed(buf, factor) {
+  const newLength = Math.round(buf.length / factor);
+  const out = new AudioBuffer({ numberOfChannels: buf.numberOfChannels, length: newLength, sampleRate: buf.sampleRate });
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const input = buf.getChannelData(c);
+    const output = out.getChannelData(c);
+    for (let i = 0; i < newLength; i++) {
+      const pos = i * factor;
+      const idx = Math.floor(pos);
+      const frac = pos - idx;
+      output[i] = idx + 1 < input.length
+        ? input[idx] * (1 - frac) + input[idx + 1] * frac
+        : input[Math.min(idx, input.length - 1)];
+    }
+  }
+  return out;
+}
+
+function transformMono(buf) {
+  const out = new AudioBuffer({ numberOfChannels: 1, length: buf.length, sampleRate: buf.sampleRate });
+  const output = out.getChannelData(0);
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const input = buf.getChannelData(c);
+    for (let i = 0; i < buf.length; i++) output[i] += input[i] / buf.numberOfChannels;
+  }
+  return out;
+}
+
+function transformNormalize(buf) {
+  let peak = 0;
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const data = buf.getChannelData(c);
+    for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+  }
+  if (peak === 0 || peak >= 1) return buf;
+  const gain = 1 / peak;
+  const out = new AudioBuffer({ numberOfChannels: buf.numberOfChannels, length: buf.length, sampleRate: buf.sampleRate });
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const input = buf.getChannelData(c);
+    const output = out.getChannelData(c);
+    for (let i = 0; i < buf.length; i++) output[i] = input[i] * gain;
+  }
+  return out;
+}
+
+function updatePlayer(buf) {
+  const wav = encodeWAV(buf);
+  audioPlayer.src = URL.createObjectURL(wav);
+}
+
+function updateFileInfo(buf) {
+  const mins = Math.floor(buf.duration / 60);
+  const secs = Math.floor(buf.duration % 60).toString().padStart(2, '0');
+  fileInfo.textContent = `${currentFile.name}  ·  ${mins}:${secs}  ·  ${buf.numberOfChannels === 1 ? 'mono' : 'stereo'}  ·  ${Math.round(buf.sampleRate / 1000)}kHz`;
+}
 
 // ---- WAV encoder ----
 
@@ -189,12 +374,19 @@ function download(blob, filename) {
 // ---- Reset ----
 
 resetBtn.addEventListener('click', () => {
-  currentFile = null;
-  audioBuffer = null;
+  currentFile = audioBuffer = workingBuffer = null;
   audioPlayer.src = '';
   fileInput.value = '';
   previewSection.classList.add('hidden');
   dropZone.classList.remove('hidden');
+  selectedTransforms = [];
+  selectedTransforms = [];
+  appliedSnapshot    = '';
+  resetSpeedBtn('half');
+  resetSpeedBtn('double');
+  document.querySelectorAll('.transform-btn:not([data-speed-group])').forEach(b => b.classList.remove('selected'));
+  syncApplyBtn();
+  resetTransformBtn.classList.add('hidden');
   hideError();
   hideStatus();
 });
@@ -202,7 +394,7 @@ resetBtn.addEventListener('click', () => {
 // ---- UI helpers ----
 
 function setButtons(disabled) {
-  document.querySelectorAll('.convert-btn').forEach(b => b.disabled = disabled);
+  document.querySelectorAll('.convert-btn, .transform-btn').forEach(b => b.disabled = disabled);
 }
 
 let statusInterval = null;

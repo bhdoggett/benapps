@@ -124,6 +124,81 @@
   filter: invert(1) hue-rotate(180deg);
 }
 
+/* ---- Transform buttons ---- */
+
+.transform-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.transform-btn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.transform-btn:hover,
+.transform-btn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.transform-btn.selected {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.transform-btn:disabled {
+  opacity: 0.3;
+  cursor: wait;
+}
+
+.apply-btn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+}
+
+.apply-btn.has-changes {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.apply-btn.has-changes:hover {
+  background: var(--dim);
+}
+
+.apply-btn:disabled {
+  opacity: 0.3;
+  cursor: wait;
+}
+
+.reset-transform {
+  margin-left: auto;
+  border-color: var(--dim);
+  color: var(--dim);
+}
+
+.reset-transform:hover {
+  border-color: var(--muted);
+  color: var(--bg);
+  background: var(--muted);
+}
+
 /* ---- Convert buttons ---- */
 
 .convert-row {
