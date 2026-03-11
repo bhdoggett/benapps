@@ -8,7 +8,7 @@ import StatusMessage from '../../components/StatusMessage'
 import { transformReverse, transformSpeed, transformMono, transformNormalize } from './audioTransforms'
 import { encodeWAV } from './wavEncoder'
 import { encodeMP3 } from './mp3Encoder'
-import styles from './ConvertAudioApp.module.css'
+import styles from './AudioApp.module.css'
 
 type SpeedKey = 'half' | 'double'
 const SPEED_CYCLES: Record<SpeedKey, { labels: string[]; factors: number[] }> = {
@@ -122,7 +122,7 @@ function fileInfo(file: File, buf: AudioBuffer): string {
   return `${file.name}  ·  ${mins}:${secs}  ·  ${buf.numberOfChannels === 1 ? 'mono' : 'stereo'}  ·  ${Math.round(buf.sampleRate / 1000)}kHz`
 }
 
-export default function ConvertAudioApp() {
+export default function AudioApp() {
   const [state, dispatch] = useReducer(reducer, initial)
   const playerRef = useRef<HTMLAudioElement>(null)
 
@@ -214,7 +214,7 @@ export default function ConvertAudioApp() {
   return (
     <div className={styles.app}>
       <BackLink />
-      <AppHeader title="convert audio" />
+      <AppHeader title="audio" />
 
       {!hasFile && !state.statusVisible && (
         <DropZone accept="audio/*" onFile={loadFile} label="drop audio file here" />
@@ -254,15 +254,12 @@ export default function ConvertAudioApp() {
                 {speedLabel(group)}
               </button>
             ))}
-          </div>
-
-          <div className={styles.applyRow}>
             <button
               className={[styles.applyBtn, hasChanges ? styles.hasChanges : ''].filter(Boolean).join(' ')}
               onClick={applyTransforms}
               disabled={state.buttonsDisabled}
             >
-              ▶ apply
+              ▶
             </button>
             {hasTransforms && (
               <button
@@ -270,7 +267,7 @@ export default function ConvertAudioApp() {
                 onClick={resetTransforms}
                 disabled={state.buttonsDisabled}
               >
-                reset transforms
+                reset
               </button>
             )}
           </div>

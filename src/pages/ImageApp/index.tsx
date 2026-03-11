@@ -4,7 +4,7 @@ import AppHeader from '../../components/AppHeader'
 import DropZone from '../../components/DropZone'
 import ActionButton from '../../components/ActionButton'
 import ConvertButton from '../../components/ConvertButton'
-import styles from './ConvertImageApp.module.css'
+import styles from './ImageApp.module.css'
 
 type ImageState = {
   img: HTMLImageElement
@@ -12,7 +12,7 @@ type ImageState = {
   info: string
 }
 
-export default function ConvertImageApp() {
+export default function ImageApp() {
   const [current, setCurrent] = useState<ImageState | null>(null)
   const [error, setError] = useState('')
 
@@ -65,7 +65,7 @@ export default function ConvertImageApp() {
   return (
     <div className={styles.app}>
       <BackLink />
-      <AppHeader title="convert image" />
+      <AppHeader title="image" />
       {!current && <DropZone accept="image/*" onFile={loadFile} label="drop image here" />}
       {error && <p className={styles.errorMsg}>{error}</p>}
       {current && (
