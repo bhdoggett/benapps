@@ -7,6 +7,45 @@
   flex-direction: column;
 }
 
+.modeRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.modeBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.modeBtn:hover,
+.modeBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.modeBtnActive {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.unit {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .status {
   font-family: var(--font-mono);
   font-size: 0.65rem;

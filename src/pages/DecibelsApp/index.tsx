@@ -3,12 +3,13 @@ import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import styles from './DecibelsApp.module.css'
 
+const SPL_OFFSET = 94
+
 export default function DecibelsApp() {
   const [currentDb, setCurrentDb] = useState<number | null>(null)
   const [averageDb, setAverageDb] = useState<number | null>(null)
-  const [sampleSum, setSampleSum] = useState(0)
-  const [sampleCount, setSampleCount] = useState(0)
   const [status, setStatus] = useState<'idle' | 'requesting' | 'active' | 'denied'>('idle')
+  const [mode, setMode] = useState<'dbfs' | 'spl'>('dbfs')
 
   const streamRef = useRef<MediaStream | null>(null)
   const animFrameRef = useRef<number>(0)
@@ -16,7 +17,6 @@ export default function DecibelsApp() {
   const dataArrayRef = useRef<Uint8Array | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
 
-  // Use refs to track sum/count for rAF loop without stale closures
   const sumRef = useRef(0)
   const countRef = useRef(0)
   const smoothedDbRef = useRef<number | null>(null)
@@ -72,8 +72,6 @@ export default function DecibelsApp() {
             const avg = sumRef.current / countRef.current
 
             setCurrentDb(smoothedDbRef.current)
-            setSampleSum(sumRef.current)
-            setSampleCount(countRef.current)
             setAverageDb(avg)
           }
 
@@ -98,43 +96,67 @@ export default function DecibelsApp() {
     sumRef.current = 0
     countRef.current = 0
     smoothedDbRef.current = null
-    setSampleSum(0)
-    setSampleCount(0)
     setAverageDb(null)
     setCurrentDb(null)
   }
 
-  const fmt = (val: number | null) =>
-    val === null ? '—' : `${val.toFixed(1)} dB`
+  const convert = (val: number | null) =>
+    val === null ? null : mode === 'spl' ? val + SPL_OFFSET : val
+
+  const fmt = (val: number | null) => {
+    const v = convert(val)
+    return v === null ? '—' : `${v.toFixed(1)}`
+  }
+
+  const unit = mode === 'spl' ? '≈ dB SPL' : 'dBFS'
 
   return (
     <div className={styles.app}>
       <BackLink />
       <AppHeader title="decibels" />
 
-        {status === 'requesting' && (
-          <p className={styles.status}>requesting microphone...</p>
-        )}
+      {status === 'requesting' && (
+        <p className={styles.status}>requesting microphone...</p>
+      )}
 
-        {status === 'denied' && (
-          <p className={styles.status}>microphone access denied</p>
-        )}
+      {status === 'denied' && (
+        <p className={styles.status}>microphone access denied</p>
+      )}
 
-        {status === 'active' && (
-          <>
-            <div className={styles.row}>
-              <span className={styles.label}>now</span>
-              <span className={styles.value}>{fmt(currentDb)}</span>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.label}>avg</span>
-              <span className={styles.value}>{fmt(averageDb)}</span>
-            </div>
-            <div className={styles.btnRow}>
-              <button className={styles.btn} onClick={handleReset}>reset avg</button>
-            </div>
-          </>
-        )}
+      {status === 'active' && (
+        <>
+          <div className={styles.modeRow}>
+            <button
+              className={[styles.modeBtn, mode === 'dbfs' ? styles.modeBtnActive : ''].filter(Boolean).join(' ')}
+              onClick={() => setMode('dbfs')}
+            >
+              dBFS
+            </button>
+            <button
+              className={[styles.modeBtn, mode === 'spl' ? styles.modeBtnActive : ''].filter(Boolean).join(' ')}
+              onClick={() => setMode('spl')}
+            >
+              dB SPL
+            </button>
+          </div>
+
+          <div className={styles.row}>
+            <span className={styles.label}>now</span>
+            <span className={styles.value}>
+              {fmt(currentDb)} <span className={styles.unit}>{unit}</span>
+            </span>
+          </div>
+          <div className={styles.row}>
+            <span className={styles.label}>avg</span>
+            <span className={styles.value}>
+              {fmt(averageDb)} <span className={styles.unit}>{unit}</span>
+            </span>
+          </div>
+          <div className={styles.btnRow}>
+            <button className={styles.btn} onClick={handleReset}>reset avg</button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
