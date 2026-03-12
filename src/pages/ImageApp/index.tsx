@@ -6,7 +6,7 @@ import DropZone from '../../components/DropZone'
 import ActionButton from '../../components/ActionButton'
 import ConvertButton from '../../components/ConvertButton'
 import CropOverlay from './CropOverlay'
-import { applyTransforms, defaultTransforms } from './imageTransforms'
+import { applyTransforms, exportAsPdf, defaultTransforms } from './imageTransforms'
 import type { TransformState, CropRegion } from './imageTransforms'
 
 function squareCrop(w: number, h: number): CropRegion {
@@ -24,7 +24,7 @@ import styles from './ImageApp.module.css'
 type ImageState = {
   img: HTMLImageElement
   name: string
-  info: string
+  fileName: string
 }
 
 type State = {
@@ -44,7 +44,6 @@ type Action =
   | { type: 'SET_BRIGHTNESS'; value: number }
   | { type: 'TOGGLE_CROP' }
   | { type: 'SET_CROP'; region: CropRegion }
-  | { type: 'CLEAR_CROP' }
   | { type: 'RESET' }
 
 const initial: State = {
@@ -74,8 +73,6 @@ function reducer(state: State, action: Action): State {
       return { ...state, cropActive: !state.cropActive }
     case 'SET_CROP':
       return { ...state, transforms: { ...state.transforms, crop: action.region } }
-    case 'CLEAR_CROP':
-      return { ...state, transforms: { ...state.transforms, crop: null }, cropActive: false }
     case 'RESET':
       return { ...initial }
     default:
@@ -120,7 +117,7 @@ export default function ImageApp() {
         current: {
           img,
           name: file.name.replace(/\.[^.]+$/, ''),
-          info: `${file.name}  ·  ${img.naturalWidth} × ${img.naturalHeight}`,
+          fileName: file.name,
         },
       })
     }
@@ -130,6 +127,10 @@ export default function ImageApp() {
 
   function convert(format: string) {
     if (!state.current) return
+    if (format === 'pdf') {
+      exportAsPdf(state.current.img, state.transforms, `${state.current.name}.pdf`)
+      return
+    }
     const ext = format === 'jpeg' ? 'jpg' : format
     applyTransforms(state.current.img, state.transforms, format, (blob) => {
       const a = document.createElement('a')
@@ -162,7 +163,10 @@ export default function ImageApp() {
       {current && (
         <>
           <div className={styles.fileMeta}>
-            <span className={styles.fileInfo}>{current.info}</span>
+            <div className={styles.fileInfo}>
+              <span className={styles.fileName}>{current.fileName}</span>
+              <span className={styles.fileDims}>&nbsp;·&nbsp;{current.img.naturalWidth}&nbsp;×&nbsp;{current.img.naturalHeight}</span>
+            </div>
             <ActionButton onClick={() => dispatch({ type: 'RESET' })} muted>reset</ActionButton>
           </div>
 
@@ -233,14 +237,6 @@ export default function ImageApp() {
                 >
                   16:9
                 </button>
-                {transforms.crop && (
-                  <button
-                    className={styles.transformBtn}
-                    onClick={() => dispatch({ type: 'CLEAR_CROP' })}
-                  >
-                    clear crop
-                  </button>
-                )}
               </>
             )}
           </div>
@@ -249,6 +245,7 @@ export default function ImageApp() {
             <ConvertButton format="png" label="png" onClick={() => convert('png')} />
             <ConvertButton format="jpeg" label="jpg" onClick={() => convert('jpeg')} />
             <ConvertButton format="webp" label="webp" onClick={() => convert('webp')} />
+            <ConvertButton format="pdf" label="pdf" onClick={() => convert('pdf')} />
           </div>
         </>
       )}

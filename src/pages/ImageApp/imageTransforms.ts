@@ -60,3 +60,57 @@ export function applyTransforms(
     if (blob) onBlob(blob)
   }, `image/${format}`)
 }
+
+export function exportAsPdf(img: HTMLImageElement, t: TransformState, filename: string) {
+  applyTransforms(img, t, 'jpeg', (blob) => {
+    void blob.arrayBuffer().then((buffer) => {
+      const jpegBytes = new Uint8Array(buffer)
+      const srcW = t.crop ? t.crop.w : img.naturalWidth
+      const srcH = t.crop ? t.crop.h : img.naturalHeight
+      const rotated = t.rotation === 90 || t.rotation === 270
+      const w = rotated ? srcH : srcW
+      const h = rotated ? srcW : srcH
+      downloadPdf(w, h, jpegBytes, filename)
+    })
+  })
+}
+
+function downloadPdf(w: number, h: number, jpegBytes: Uint8Array, filename: string) {
+  const enc = new TextEncoder()
+
+  const csBytes = enc.encode(`q ${w} 0 0 ${h} 0 0 cm /Im Do Q`)
+  const o1 = enc.encode(`1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`)
+  const o2 = enc.encode(`2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`)
+  const o3 = enc.encode(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Contents 4 0 R /Resources << /XObject << /Im 5 0 R >> >> >>\nendobj\n`)
+  const o4h = enc.encode(`4 0 obj\n<< /Length ${csBytes.length} >>\nstream\n`)
+  const o4f = enc.encode(`\nendstream\nendobj\n`)
+  const o5h = enc.encode(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`)
+  const o5f = enc.encode(`\nendstream\nendobj\n`)
+  const hdr = enc.encode(`%PDF-1.4\n`)
+
+  let off = hdr.length
+  const offs: number[] = []
+  offs.push(off); off += o1.length
+  offs.push(off); off += o2.length
+  offs.push(off); off += o3.length
+  offs.push(off); off += o4h.length + csBytes.length + o4f.length
+  offs.push(off); off += o5h.length + jpegBytes.length + o5f.length
+
+  const xrefOff = off
+  const xref = enc.encode(
+    `xref\n0 6\n0000000000 65535 f \n` +
+    offs.map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('')
+  )
+  const trailer = enc.encode(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOff}\n%%EOF`)
+
+  const parts = [hdr, o1, o2, o3, o4h, csBytes, o4f, o5h, jpegBytes, o5f, xref, trailer]
+  const out = new Uint8Array(parts.reduce((s, p) => s + p.length, 0))
+  let pos = 0
+  for (const p of parts) { out.set(p, pos); pos += p.length }
+
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([out], { type: 'application/pdf' }))
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(a.href)
+}

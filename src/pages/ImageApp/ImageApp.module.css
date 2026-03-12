@@ -37,14 +37,31 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
 .fileInfo {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  overflow: hidden;
   font-size: 0.65rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.fileDims {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .transformRow {
