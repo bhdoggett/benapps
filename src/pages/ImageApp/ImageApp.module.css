@@ -125,11 +125,6 @@
   text-align: right;
 }
 
-.cropRow {
-  display: flex;
-  gap: 0.8rem;
-  margin-bottom: 1.5rem;
-}
 
 .convertRow {
   display: flex;

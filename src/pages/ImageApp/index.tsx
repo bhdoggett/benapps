@@ -168,10 +168,14 @@ const [state, dispatch] = useReducer(reducer, initial)
 
   const { current, transforms, error, cropActive } = state
 
-  const toggleButtons: [string, () => void, boolean][] = [
+  const positionalButtons: [string, () => void, boolean][] = [
     ['flip h', () => dispatch({ type: 'TOGGLE_FLIP_H' }), transforms.flipH],
     ['flip v', () => dispatch({ type: 'TOGGLE_FLIP_V' }), transforms.flipV],
     ['rotate', () => dispatch({ type: 'ROTATE_CW' }), transforms.rotation !== 0],
+    ['crop', () => dispatch({ type: 'TOGGLE_CROP' }), cropActive],
+  ]
+
+  const filterButtons: [string, () => void, boolean][] = [
     ['greyscale', () => dispatch({ type: 'TOGGLE_GREYSCALE' }), transforms.greyscale],
     ['sepia', () => dispatch({ type: 'TOGGLE_SEPIA' }), transforms.sepia],
     ['invert', () => dispatch({ type: 'TOGGLE_INVERT' }), transforms.invert],
@@ -224,7 +228,7 @@ const [state, dispatch] = useReducer(reducer, initial)
           </div>
 
           <div className={styles.transformRow}>
-            {toggleButtons.map(([label, handler, active]) => (
+            {positionalButtons.map(([label, handler, active]) => (
               <button
                 key={label}
                 className={[styles.transformBtn, active ? styles.selected : ''].filter(Boolean).join(' ')}
@@ -233,23 +237,6 @@ const [state, dispatch] = useReducer(reducer, initial)
                 {label}
               </button>
             ))}
-          </div>
-
-          {sliders.map(([label, value, min, max, display, onChange]) => (
-            <div key={label} className={styles.sliderRow}>
-              <span className={styles.sliderLabel}>{label}</span>
-              <RangeSlider min={min} max={max} value={value} onChange={onChange} />
-              <span className={styles.sliderValue}>{display}</span>
-            </div>
-          ))}
-
-          <div className={styles.cropRow}>
-            <button
-              className={[styles.transformBtn, cropActive ? styles.selected : ''].filter(Boolean).join(' ')}
-              onClick={() => dispatch({ type: 'TOGGLE_CROP' })}
-            >
-              crop
-            </button>
             {cropActive && (
               <>
                 <button
@@ -267,6 +254,26 @@ const [state, dispatch] = useReducer(reducer, initial)
               </>
             )}
           </div>
+
+          <div className={styles.transformRow}>
+            {filterButtons.map(([label, handler, active]) => (
+              <button
+                key={label}
+                className={[styles.transformBtn, active ? styles.selected : ''].filter(Boolean).join(' ')}
+                onClick={handler}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {sliders.map(([label, value, min, max, display, onChange]) => (
+            <div key={label} className={styles.sliderRow}>
+              <span className={styles.sliderLabel}>{label}</span>
+              <RangeSlider min={min} max={max} value={value} onChange={onChange} />
+              <span className={styles.sliderValue}>{display}</span>
+            </div>
+          ))}
 
           <div className={styles.convertRow}>
             <ConvertButton format="png" label="png" onClick={() => convert('png')} />

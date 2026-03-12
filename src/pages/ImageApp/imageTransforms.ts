@@ -1,24 +1,28 @@
 export type CropRegion = { x: number; y: number; w: number; h: number }
 
 export type TransformState = {
+  // positional
   flipH: boolean
   flipV: boolean
   rotation: number // 0 | 90 | 180 | 270
+  crop: CropRegion | null
+  // filter toggles
   greyscale: boolean
   sepia: boolean
   invert: boolean
+  // filter adjustments
   brightness: number // -50 to +50
   contrast: number   // -50 to +50
   saturate: number   // -50 to +50
   hueRotate: number  // -180 to 180
   blur: number       // 0 to 20
-  crop: CropRegion | null
 }
 
 export const defaultTransforms: TransformState = {
   flipH: false,
   flipV: false,
   rotation: 0,
+  crop: null,
   greyscale: false,
   sepia: false,
   invert: false,
@@ -27,7 +31,6 @@ export const defaultTransforms: TransformState = {
   saturate: 0,
   hueRotate: 0,
   blur: 0,
-  crop: null,
 }
 
 export function applyTransforms(
