@@ -96,34 +96,37 @@
   color: var(--fg);
 }
 
-.brightnessRow {
+.sliderRow {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   margin-bottom: 1rem;
 }
 
-.brightnessLabel {
+.sliderLabel {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--muted);
   white-space: nowrap;
+  width: 5.5rem;
+  flex-shrink: 0;
+  text-align: center;
 }
 
-.brightnessSlider {
+.sliderInput {
   flex: 1;
   accent-color: var(--fg);
   cursor: pointer;
 }
 
-.brightnessValue {
+.sliderValue {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   color: var(--muted);
-  min-width: 3ch;
+  min-width: 5ch;
   text-align: right;
 }
 

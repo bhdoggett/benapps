@@ -41,7 +41,13 @@ type Action =
   | { type: 'TOGGLE_FLIP_V' }
   | { type: 'ROTATE_CW' }
   | { type: 'TOGGLE_GREYSCALE' }
+  | { type: 'TOGGLE_SEPIA' }
+  | { type: 'TOGGLE_INVERT' }
   | { type: 'SET_BRIGHTNESS'; value: number }
+  | { type: 'SET_CONTRAST'; value: number }
+  | { type: 'SET_SATURATE'; value: number }
+  | { type: 'SET_HUE_ROTATE'; value: number }
+  | { type: 'SET_BLUR'; value: number }
   | { type: 'TOGGLE_CROP' }
   | { type: 'SET_CROP'; region: CropRegion }
   | { type: 'RESET' }
@@ -67,8 +73,20 @@ function reducer(state: State, action: Action): State {
       return { ...state, transforms: { ...state.transforms, rotation: (state.transforms.rotation + 90) % 360 } }
     case 'TOGGLE_GREYSCALE':
       return { ...state, transforms: { ...state.transforms, greyscale: !state.transforms.greyscale } }
+    case 'TOGGLE_SEPIA':
+      return { ...state, transforms: { ...state.transforms, sepia: !state.transforms.sepia } }
+    case 'TOGGLE_INVERT':
+      return { ...state, transforms: { ...state.transforms, invert: !state.transforms.invert } }
     case 'SET_BRIGHTNESS':
       return { ...state, transforms: { ...state.transforms, brightness: action.value } }
+    case 'SET_CONTRAST':
+      return { ...state, transforms: { ...state.transforms, contrast: action.value } }
+    case 'SET_SATURATE':
+      return { ...state, transforms: { ...state.transforms, saturate: action.value } }
+    case 'SET_HUE_ROTATE':
+      return { ...state, transforms: { ...state.transforms, hueRotate: action.value } }
+    case 'SET_BLUR':
+      return { ...state, transforms: { ...state.transforms, blur: action.value } }
     case 'TOGGLE_CROP':
       return { ...state, cropActive: !state.cropActive }
     case 'SET_CROP':
@@ -83,7 +101,13 @@ function reducer(state: State, action: Action): State {
 function previewStyle(t: TransformState): CSSProperties {
   const filters: string[] = []
   if (t.greyscale) filters.push('grayscale(1)')
+  if (t.sepia) filters.push('sepia(1)')
+  if (t.invert) filters.push('invert(1)')
   if (t.brightness !== 0) filters.push(`brightness(${1 + t.brightness / 100})`)
+  if (t.contrast !== 0) filters.push(`contrast(${1 + t.contrast / 100})`)
+  if (t.saturate !== 0) filters.push(`saturate(${1 + t.saturate / 100})`)
+  if (t.hueRotate !== 0) filters.push(`hue-rotate(${t.hueRotate}deg)`)
+  if (t.blur !== 0) filters.push(`blur(${t.blur}px)`)
 
   const cssTransforms: string[] = []
   if (t.rotation !== 0) cssTransforms.push(`rotate(${t.rotation}deg)`)
@@ -101,7 +125,7 @@ function previewStyle(t: TransformState): CSSProperties {
 }
 
 export default function ImageApp() {
-  const [state, dispatch] = useReducer(reducer, initial)
+const [state, dispatch] = useReducer(reducer, initial)
   const imgRef = useRef<HTMLImageElement>(null)
 
   function loadFile(file: File) {
@@ -148,11 +172,18 @@ export default function ImageApp() {
     ['flip v', () => dispatch({ type: 'TOGGLE_FLIP_V' }), transforms.flipV],
     ['rotate', () => dispatch({ type: 'ROTATE_CW' }), transforms.rotation !== 0],
     ['greyscale', () => dispatch({ type: 'TOGGLE_GREYSCALE' }), transforms.greyscale],
+    ['sepia', () => dispatch({ type: 'TOGGLE_SEPIA' }), transforms.sepia],
+    ['invert', () => dispatch({ type: 'TOGGLE_INVERT' }), transforms.invert],
   ]
 
-  const brightnessLabel = transforms.brightness > 0
-    ? `+${transforms.brightness}`
-    : String(transforms.brightness)
+  function signedLabel(v: number) { return v > 0 ? `+${v}` : String(v) }
+  const sliders: [string, number, number, number, string, (v: number) => void][] = [
+    ['brightness', transforms.brightness, -50, 50, signedLabel(transforms.brightness), (v) => dispatch({ type: 'SET_BRIGHTNESS', value: v })],
+    ['contrast',   transforms.contrast,   -50, 50, signedLabel(transforms.contrast),   (v) => dispatch({ type: 'SET_CONTRAST',   value: v })],
+    ['saturate',   transforms.saturate,   -50, 50, signedLabel(transforms.saturate),   (v) => dispatch({ type: 'SET_SATURATE',   value: v })],
+    ['hue',        transforms.hueRotate, -180, 180, signedLabel(transforms.hueRotate),  (v) => dispatch({ type: 'SET_HUE_ROTATE', value: v })],
+    ['blur',       transforms.blur,         0,  20, transforms.blur === 0 ? '0' : `${transforms.blur}px`, (v) => dispatch({ type: 'SET_BLUR', value: v })],
+  ]
 
   return (
     <div className={styles.app}>
@@ -203,18 +234,20 @@ export default function ImageApp() {
             ))}
           </div>
 
-          <div className={styles.brightnessRow}>
-            <span className={styles.brightnessLabel}>brightness</span>
-            <input
-              type="range"
-              className={styles.brightnessSlider}
-              min={-50}
-              max={50}
-              value={transforms.brightness}
-              onChange={(e) => dispatch({ type: 'SET_BRIGHTNESS', value: Number(e.target.value) })}
-            />
-            <span className={styles.brightnessValue}>{brightnessLabel}</span>
-          </div>
+          {sliders.map(([label, value, min, max, display, onChange]) => (
+            <div key={label} className={styles.sliderRow}>
+              <span className={styles.sliderLabel}>{label}</span>
+              <input
+                type="range"
+                className={styles.sliderInput}
+                min={min}
+                max={max}
+                value={value}
+                onChange={(e) => onChange(Number(e.target.value))}
+              />
+              <span className={styles.sliderValue}>{display}</span>
+            </div>
+          ))}
 
           <div className={styles.cropRow}>
             <button

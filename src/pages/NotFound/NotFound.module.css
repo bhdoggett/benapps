@@ -1,0 +1,30 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  padding: 2rem;
+  text-align: center;
+}
+
+.heading {
+  color: var(--fg);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  margin: 0 0 1rem;
+}
+
+.link {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: var(--fg);
+}

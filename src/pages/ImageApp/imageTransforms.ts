@@ -5,7 +5,13 @@ export type TransformState = {
   flipV: boolean
   rotation: number // 0 | 90 | 180 | 270
   greyscale: boolean
+  sepia: boolean
+  invert: boolean
   brightness: number // -50 to +50
+  contrast: number   // -50 to +50
+  saturate: number   // -50 to +50
+  hueRotate: number  // -180 to 180
+  blur: number       // 0 to 20
   crop: CropRegion | null
 }
 
@@ -14,7 +20,13 @@ export const defaultTransforms: TransformState = {
   flipV: false,
   rotation: 0,
   greyscale: false,
+  sepia: false,
+  invert: false,
   brightness: 0,
+  contrast: 0,
+  saturate: 0,
+  hueRotate: 0,
+  blur: 0,
   crop: null,
 }
 
@@ -45,7 +57,13 @@ export function applyTransforms(
 
   const filters: string[] = []
   if (t.greyscale) filters.push('grayscale(1)')
+  if (t.sepia) filters.push('sepia(1)')
+  if (t.invert) filters.push('invert(1)')
   if (t.brightness !== 0) filters.push(`brightness(${1 + t.brightness / 100})`)
+  if (t.contrast !== 0) filters.push(`contrast(${1 + t.contrast / 100})`)
+  if (t.saturate !== 0) filters.push(`saturate(${1 + t.saturate / 100})`)
+  if (t.hueRotate !== 0) filters.push(`hue-rotate(${t.hueRotate}deg)`)
+  if (t.blur !== 0) filters.push(`blur(${t.blur}px)`)
   ctx.filter = filters.length > 0 ? filters.join(' ') : 'none'
 
   ctx.save()
