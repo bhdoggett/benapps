@@ -8,19 +8,29 @@
 }
 
 .previewWrap {
-  border: 1px solid var(--rule);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  height: 360px;
   margin-bottom: 1rem;
-  min-height: 180px;
-  background: var(--dim);
+}
+
+.imgWrap {
+  position: relative;
+  line-height: 0;
 }
 
 .preview {
   max-width: 100%;
   max-height: 360px;
   display: block;
+}
+
+.cropOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: crosshair;
 }
 
 .fileMeta {
@@ -35,6 +45,75 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.transformRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.transformBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.transformBtn:hover,
+.transformBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.transformBtn.selected {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.brightnessRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.brightnessLabel {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.brightnessSlider {
+  flex: 1;
+  accent-color: var(--fg);
+  cursor: pointer;
+}
+
+.brightnessValue {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  min-width: 3ch;
+  text-align: right;
+}
+
+.cropRow {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
 }
 
 .convertRow {
