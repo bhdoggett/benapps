@@ -78,17 +78,10 @@ export default function CropOverlay({ imgRef, naturalWidth, naturalHeight, initi
     const box = boxRef.current
     if (!box) return
 
-    ctx.fillStyle = 'rgba(0,0,0,0.45)'
+    ctx.fillStyle = 'rgba(0,0,0,0.62)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.clearRect(box.x, box.y, box.w, box.h)
-    ctx.strokeStyle = 'rgba(255,255,255,0.85)'
-    ctx.lineWidth = 1
-    ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.w - 1, box.h - 1)
 
-    ctx.fillStyle = 'rgba(255,255,255,0.9)'
-    for (const pos of Object.values(handlePositions(box))) {
-      ctx.fillRect(pos.x - HALF, pos.y - HALF, HANDLE_SIZE, HANDLE_SIZE)
-    }
   }
 
   // Sync canvas size; scale boxRef proportionally on resize
