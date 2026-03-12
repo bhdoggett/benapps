@@ -28,6 +28,8 @@ type State = {
   errorMsg: string
   buttonsDisabled: boolean
   playerSrc: string
+  recording: boolean
+  recordingElapsed: number
 }
 
 type Action =
@@ -43,6 +45,9 @@ type Action =
   | { type: 'ENCODE_DONE'; playerSrc: string }
   | { type: 'ENCODE_ERROR' }
   | { type: 'RESET_ALL' }
+  | { type: 'RECORD_START' }
+  | { type: 'RECORD_TICK' }
+  | { type: 'RECORD_ERROR' }
 
 const initial: State = {
   currentFile: null,
@@ -56,6 +61,8 @@ const initial: State = {
   errorMsg: '',
   buttonsDisabled: false,
   playerSrc: '',
+  recording: false,
+  recordingElapsed: 0,
 }
 
 function effectiveTransforms(selectedTransforms: string[], speedState: Record<SpeedKey, 0 | 1 | 2>): string {
@@ -103,6 +110,12 @@ function reducer(state: State, action: Action): State {
       return { ...state, buttonsDisabled: false, statusVisible: false, errorMsg: 'encoding failed' }
     case 'RESET_ALL':
       return { ...initial }
+    case 'RECORD_START':
+      return { ...state, recording: true, recordingElapsed: 0, statusVisible: false }
+    case 'RECORD_TICK':
+      return { ...state, recordingElapsed: state.recordingElapsed + 1 }
+    case 'RECORD_ERROR':
+      return { ...state, recording: false, errorMsg: 'microphone access denied' }
     default:
       return state
   }
@@ -125,10 +138,68 @@ function fileInfo(file: File, buf: AudioBuffer): string {
 export default function AudioApp() {
   const [state, dispatch] = useReducer(reducer, initial)
   const playerRef = useRef<HTMLAudioElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const hasFile = state.currentFile !== null && state.audioBuffer !== null
   const hasChanges = effectiveTransforms(state.selectedTransforms, state.speedState) !== state.appliedSnapshot
   const hasTransforms = state.selectedTransforms.length > 0 || (Object.values(state.speedState) as number[]).some(s => s > 0)
+
+  function formatElapsed(seconds: number): string {
+    const m = Math.floor(seconds / 60)
+    const s = (seconds % 60).toString().padStart(2, '0')
+    return `${m}:${s}`
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      const mediaRecorder = new MediaRecorder(stream, { mimeType })
+      mediaRecorderRef.current = mediaRecorder
+      chunksRef.current = []
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
+      }
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType })
+        const file = new File([blob], 'recording.webm', { type: mimeType })
+        stream.getTracks().forEach(t => t.stop())
+        loadFile(file)
+      }
+
+      dispatch({ type: 'RECORD_START' })
+      recordingTimerRef.current = setInterval(() => {
+        dispatch({ type: 'RECORD_TICK' })
+      }, 1000)
+      mediaRecorder.start(100)
+    } catch {
+      dispatch({ type: 'RECORD_ERROR' })
+    }
+  }
+
+  function stopRecording() {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+    mediaRecorderRef.current?.stop()
+  }
+
+  async function shareFile() {
+    if (!state.workingBuffer || !state.currentFile) return
+    const blob = encodeMP3(state.workingBuffer)
+    const baseName = state.currentFile.name.replace(/\.[^.]+$/, '')
+    const file = new File([blob], `${baseName}.mp3`, { type: 'audio/mpeg' })
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: baseName })
+    } else {
+      download(blob, `${baseName}.mp3`)
+    }
+  }
 
   function loadFile(file: File) {
     if (!file.type.startsWith('audio/')) {
@@ -207,6 +278,8 @@ export default function AudioApp() {
     return s === 0 ? SPEED_CYCLES[group].labels[0] : SPEED_CYCLES[group].labels[s - 1]
   }
 
+  const canShare = /Mobi|Android/i.test(navigator.userAgent)
+
   const infoText = hasFile && state.workingBuffer
     ? fileInfo(state.currentFile!, state.workingBuffer)
     : ''
@@ -216,8 +289,21 @@ export default function AudioApp() {
       <BackLink />
       <AppHeader title="audio" />
 
-      {!hasFile && !state.statusVisible && (
-        <DropZone accept="audio/mpeg,audio/wav,audio/aac,audio/ogg,audio/flac,audio/x-m4a,.mp3,.wav,.aac,.ogg,.flac,.m4a" onFile={loadFile} label="drop audio file here" />
+      {!hasFile && !state.statusVisible && !state.recording && (
+        <>
+          <DropZone accept="audio/mpeg,audio/wav,audio/aac,audio/ogg,audio/flac,audio/x-m4a,.mp3,.wav,.aac,.ogg,.flac,.m4a" onFile={loadFile} label="drop audio file here" />
+          <div className={styles.recordRow}>
+            <button className={styles.recordBtn} onClick={startRecording}>● record</button>
+          </div>
+        </>
+      )}
+
+      {state.recording && (
+        <div className={styles.recordRow}>
+          <span className={styles.recordingDot} />
+          <span className={styles.recordingElapsed}>{formatElapsed(state.recordingElapsed)}</span>
+          <button className={[styles.recordBtn, styles.recording].join(' ')} onClick={stopRecording}>stop</button>
+        </div>
       )}
 
       <StatusMessage message={state.statusMsg} visible={state.statusVisible} />
@@ -275,6 +361,7 @@ export default function AudioApp() {
           <div className={styles.convertRow}>
             <ConvertButton format="mp3" label="mp3" onClick={() => encode('mp3')} disabled={state.buttonsDisabled} />
             <ConvertButton format="wav" label="wav" onClick={() => encode('wav')} disabled={state.buttonsDisabled} />
+            {canShare && <ConvertButton format="share" label="share" onClick={shareFile} disabled={state.buttonsDisabled} />}
           </div>
         </>
       )}

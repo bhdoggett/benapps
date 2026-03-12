@@ -116,4 +116,57 @@
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 1rem;
+  text-align: center;
+}
+
+.recordRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.recordBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.recordBtn:hover {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.recordBtn.recording {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.recordingDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--fg);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.recordingElapsed {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
 }
