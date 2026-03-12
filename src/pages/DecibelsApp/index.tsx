@@ -42,7 +42,7 @@ export default function DecibelsApp() {
         analyser.fftSize = 2048
         source.connect(analyser)
         analyserRef.current = analyser
-        dataArrayRef.current = new Uint8Array(analyser.fftSize)
+        dataArrayRef.current = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>
 
         setStatus('active')
 
