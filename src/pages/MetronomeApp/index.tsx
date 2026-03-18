@@ -152,6 +152,7 @@ export default function MetronomeApp() {
       <BackLink />
       <AppHeader title="metronome" />
 
+      <div className={styles.content}>
       <div className={styles.controlRow}>
         <button className={styles.controlBtn} onClick={running ? stopMetronome : startMetronome}>
           {running ? 'stop' : 'start'}
@@ -212,6 +213,7 @@ export default function MetronomeApp() {
           >+</button>
         </div>
         <div className={styles.timeSigLabel}>beats</div>
+      </div>
       </div>
     </div>
   )
