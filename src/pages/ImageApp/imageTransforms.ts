@@ -101,23 +101,16 @@ export function renderRemovedBg(img: HTMLImageElement, t: TransformState): Image
   canvas.height = outH
   const ctx = canvas.getContext('2d')!
 
-  const filters: string[] = []
-  if (t.greyscale) filters.push('grayscale(1)')
-  if (t.sepia) filters.push('sepia(1)')
-  if (t.invert) filters.push('invert(1)')
-  if (t.brightness !== 0) filters.push(`brightness(${1 + t.brightness / 100})`)
-  if (t.contrast !== 0) filters.push(`contrast(${1 + t.contrast / 100})`)
-  if (t.saturate !== 0) filters.push(`saturate(${1 + t.saturate / 100})`)
-  if (t.hueRotate !== 0) filters.push(`hue-rotate(${t.hueRotate}deg)`)
-  if (t.blur !== 0) filters.push(`blur(${t.blur}px)`)
-  ctx.filter = filters.length > 0 ? filters.join(' ') : 'none'
-
+  // No ctx.filter here — CSS filters are unreliable for getImageData across browsers.
+  // Filters are applied via CSS style on the preview canvas element instead.
+  const halfW = Math.round(outW / 2)
+  const halfH = Math.round(outH / 2)
   ctx.save()
-  ctx.translate(outW / 2, outH / 2)
+  ctx.translate(halfW, halfH)
   ctx.rotate((t.rotation * Math.PI) / 180)
   if (t.flipH) ctx.scale(-1, 1)
   if (t.flipV) ctx.scale(1, -1)
-  ctx.drawImage(img, srcX, srcY, srcW, srcH, -srcW / 2, -srcH / 2, srcW, srcH)
+  ctx.drawImage(img, srcX, srcY, srcW, srcH, -Math.round(srcW / 2), -Math.round(srcH / 2), srcW, srcH)
   ctx.restore()
 
   const imageData = ctx.getImageData(0, 0, outW, outH)

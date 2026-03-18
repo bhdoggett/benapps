@@ -1,5 +1,5 @@
 import { useReducer, useRef, useEffect } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import BackLink from '../../components/BackLink'
 import RangeSlider from '../../components/RangeSlider'
 import AppHeader from '../../components/AppHeader'
@@ -105,7 +105,7 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-function previewStyle(t: TransformState): CSSProperties {
+function cssFilterStr(t: TransformState): string | undefined {
   const filters: string[] = []
   if (t.greyscale) filters.push('grayscale(1)')
   if (t.sepia) filters.push('sepia(1)')
@@ -115,7 +115,10 @@ function previewStyle(t: TransformState): CSSProperties {
   if (t.saturate !== 0) filters.push(`saturate(${1 + t.saturate / 100})`)
   if (t.hueRotate !== 0) filters.push(`hue-rotate(${t.hueRotate}deg)`)
   if (t.blur !== 0) filters.push(`blur(${t.blur}px)`)
+  return filters.length > 0 ? filters.join(' ') : undefined
+}
 
+function previewStyle(t: TransformState): CSSProperties {
   const cssTransforms: string[] = []
   if (t.rotation !== 0) cssTransforms.push(`rotate(${t.rotation}deg)`)
   if (t.flipH) cssTransforms.push('scaleX(-1)')
@@ -124,7 +127,7 @@ function previewStyle(t: TransformState): CSSProperties {
   const rotated = t.rotation === 90 || t.rotation === 270
 
   return {
-    filter: filters.length > 0 ? filters.join(' ') : undefined,
+    filter: cssFilterStr(t),
     transform: cssTransforms.length > 0 ? cssTransforms.join(' ') : undefined,
     // When rotated 90/270, layout width becomes visual height — cap it at 360px
     maxWidth: rotated ? '360px' : undefined,
@@ -185,18 +188,34 @@ const [state, dispatch] = useReducer(reducer, initial)
 
   const { current, transforms, error, cropActive } = state
 
-  const positionalButtons: [string, () => void, boolean][] = [
-    ['flip h', () => dispatch({ type: 'TOGGLE_FLIP_H' }), transforms.flipH],
-    ['flip v', () => dispatch({ type: 'TOGGLE_FLIP_V' }), transforms.flipV],
-    ['rotate', () => dispatch({ type: 'ROTATE_CW' }), transforms.rotation !== 0],
-    ['crop', () => dispatch({ type: 'TOGGLE_CROP' }), cropActive],
+  const positionalButtons: [ReactNode, () => void, boolean][] = [
+    [
+      <svg key="flipH" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="1" y1="8" x2="7" y2="8"/><polyline points="3.5,5.5 1,8 3.5,10.5"/>
+        <line x1="9" y1="8" x2="15" y2="8"/><polyline points="12.5,5.5 15,8 12.5,10.5"/>
+      </svg>,
+      () => dispatch({ type: 'TOGGLE_FLIP_H' }), transforms.flipH,
+    ],
+    [
+      <svg key="flipV" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="8" y1="1" x2="8" y2="7"/><polyline points="5.5,3.5 8,1 10.5,3.5"/>
+        <line x1="8" y1="9" x2="8" y2="15"/><polyline points="5.5,12.5 8,15 10.5,12.5"/>
+      </svg>,
+      () => dispatch({ type: 'TOGGLE_FLIP_V' }), transforms.flipV,
+    ],
+    [
+      <svg key="rotate" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13 8A5 5 0 1 1 10.5 3.4"/>
+        <polyline points="9,1 13,3.5 11,7"/>
+      </svg>,
+      () => dispatch({ type: 'ROTATE_CW' }), transforms.rotation !== 0,
+    ],
   ]
 
   const filterButtons: [string, () => void, boolean][] = [
     ['greyscale', () => dispatch({ type: 'TOGGLE_GREYSCALE' }), transforms.greyscale],
     ['sepia', () => dispatch({ type: 'TOGGLE_SEPIA' }), transforms.sepia],
     ['invert', () => dispatch({ type: 'TOGGLE_INVERT' }), transforms.invert],
-    ['remove bg', () => dispatch({ type: 'TOGGLE_REMOVE_BG' }), transforms.removeBg],
   ]
 
   function signedLabel(v: number) { return v > 0 ? `+${v}` : String(v) }
@@ -227,9 +246,7 @@ const [state, dispatch] = useReducer(reducer, initial)
           <div className={styles.previewWrap}>
             <div className={styles.imgWrap}>
               {transforms.removeBg ? (
-                <div className={styles.checkerboard}>
-                  <canvas ref={canvasRef} className={styles.bgCanvas} />
-                </div>
+                <canvas ref={canvasRef} className={styles.bgCanvas} style={{ filter: cssFilterStr(transforms) }} />
               ) : (
                 <>
                   <img
@@ -254,15 +271,21 @@ const [state, dispatch] = useReducer(reducer, initial)
           </div>
 
           <div className={styles.transformRow}>
-            {positionalButtons.map(([label, handler, active]) => (
+            {positionalButtons.map(([icon, handler, active], i) => (
               <button
-                key={label}
-                className={[styles.transformBtn, active ? styles.selected : ''].filter(Boolean).join(' ')}
+                key={i}
+                className={[styles.transformBtn, styles.iconBtn, active ? styles.selected : ''].filter(Boolean).join(' ')}
                 onClick={handler}
               >
-                {label}
+                {icon}
               </button>
             ))}
+            <button
+              className={[styles.transformBtn, cropActive ? styles.selected : ''].filter(Boolean).join(' ')}
+              onClick={() => dispatch({ type: 'TOGGLE_CROP' })}
+            >
+              crop
+            </button>
             {cropActive && (
               <>
                 <button
@@ -291,12 +314,6 @@ const [state, dispatch] = useReducer(reducer, initial)
                 {label}
               </button>
             ))}
-            {transforms.removeBg && (
-              <>
-                <RangeSlider min={0} max={100} value={transforms.bgTolerance} onChange={(v) => dispatch({ type: 'SET_BG_TOLERANCE', value: v })} />
-                <span className={styles.sliderValue}>{transforms.bgTolerance}</span>
-              </>
-            )}
           </div>
 
           {sliders.map(([label, value, min, max, display, onChange]) => (
@@ -306,6 +323,17 @@ const [state, dispatch] = useReducer(reducer, initial)
               <span className={styles.sliderValue}>{display}</span>
             </div>
           ))}
+
+          <div className={styles.sliderRow}>
+            <button
+              className={[styles.transformBtn, transforms.removeBg ? styles.selected : ''].filter(Boolean).join(' ')}
+              onClick={() => dispatch({ type: 'TOGGLE_REMOVE_BG' })}
+            >
+              remove bg
+            </button>
+            <RangeSlider min={0} max={100} value={transforms.bgTolerance} onChange={(v) => dispatch({ type: 'SET_BG_TOLERANCE', value: v })} />
+            <span className={styles.sliderValue}>{transforms.bgTolerance}</span>
+          </div>
 
           <div className={styles.convertRow}>
             <ConvertButton format="png" label="png" onClick={() => convert('png')} />

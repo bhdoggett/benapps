@@ -2,6 +2,7 @@
   -webkit-appearance: none;
   appearance: none;
   flex: 1;
+  min-width: 0;
   height: 20px;
   background: transparent;
   cursor: pointer;
@@ -18,7 +19,7 @@
   width: 12px;
   height: 20px;
   margin-top: -9.5px;
-  background: linear-gradient(to right, #686868, #2e2e2e);
+  background: linear-gradient(to right, var(--dim), var(--fg));
   cursor: pointer;
 }
 
@@ -32,6 +33,6 @@
   border-radius: 0;
   width: 12px;
   height: 20px;
-  background: linear-gradient(to right, #686868, #2e2e2e);
+  background: linear-gradient(to right, var(--dim), var(--fg));
   cursor: pointer;
 }
