@@ -1,0 +1,170 @@
+.app {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 3.5rem 2rem 4rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.presetGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6rem;
+}
+
+.centeredRow {
+  display: flex;
+  justify-content: center;
+}
+
+.presetBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.55rem 0;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.presetBtn:hover,
+.presetBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.startBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.startBtn:hover,
+.startBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+/* Full-screen overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+  cursor: pointer;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  color: var(--fg);
+}
+
+.timerInner {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  width: min(90vw, 36rem);
+}
+
+.presetLabel {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.timeDisplay {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 20vw, 10rem);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--fg);
+  margin-bottom: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeDisplay.done {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.controlRow {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.controlBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 3.5rem;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.controlBtn:hover,
+.controlBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}

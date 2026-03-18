@@ -7,6 +7,9 @@ import ImageApp from './pages/ImageApp'
 import AudioApp from './pages/AudioApp'
 import DecibelsApp from './pages/DecibelsApp'
 import LocationApp from './pages/LocationApp'
+import TimerApp from './pages/TimerApp'
+import TunerApp from './pages/TunerApp'
+import MetronomeApp from './pages/MetronomeApp'
 import ErrorBoundary, { RouteErrorFallback } from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
 import ThemeToggle from './components/ThemeToggle'
@@ -24,6 +27,9 @@ const router = createBrowserRouter([
       { path: '/audio', element: <AudioApp /> },
       { path: '/decibels', element: <DecibelsApp /> },
       { path: '/location', element: <LocationApp /> },
+      { path: '/timer', element: <TimerApp /> },
+      { path: '/tuner', element: <TunerApp /> },
+      { path: '/metronome', element: <MetronomeApp /> },
       { path: '*', element: <NotFound /> },
     ],
   },

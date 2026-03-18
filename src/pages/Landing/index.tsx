@@ -9,6 +9,9 @@ const apps = [
   { path: '/audio', name: 'audio' },
   { path: '/decibels', name: 'decibels' },
   { path: '/location', name: 'location' },
+  { path: '/timer', name: 'timer' },
+  { path: '/tuner', name: 'tuner' },
+  { path: '/metronome', name: 'metronome' },
 ]
 
 export default function Landing() {

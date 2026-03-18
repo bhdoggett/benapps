@@ -1,0 +1,207 @@
+.app {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 3.5rem 2rem 4rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.status {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.noteDisplay {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  margin-bottom: 2.5rem;
+}
+
+.noteName {
+  font-family: var(--font-mono);
+  font-size: clamp(4rem, 20vw, 7rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.inTune {
+  color: var(--fg);
+}
+
+.tuningBar {
+  margin-bottom: 2.5rem;
+}
+
+.tuningTrack {
+  position: relative;
+  height: 3px;
+  background: var(--dim);
+  margin-bottom: 0.5rem;
+}
+
+.centerMark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 10px;
+  background: var(--muted);
+}
+
+.needle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 18px;
+  background: var(--muted);
+  transition: left 0.08s linear, background 0.2s;
+}
+
+.needleInTune {
+  background: var(--fg);
+}
+
+.tuningLabels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.unit {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.modeRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.modeBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.modeBtn:hover,
+.modeBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.modeBtnActive {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.notePicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.notePickerName {
+  width: 14rem;
+  text-align: center;
+}
+
+.stepBtn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.stepBtn:hover,
+.stepBtn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.btnRow {
+  display: flex;
+  margin-top: 0.5rem;
+}
+
+.btn {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  border-color: var(--muted);
+  color: var(--fg);
+}
+
+.btnActive {
+  border-color: var(--fg);
+  color: var(--fg);
+}
