@@ -417,6 +417,18 @@ export default function AudioApp() {
     return s === 0 ? SPEED_CYCLES[group].labels[0] : SPEED_CYCLES[group].labels[s - 1]
   }
 
+  useEffect(() => {
+    if (!hasFile) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === 'Space' && !(e.target instanceof HTMLInputElement)) {
+        e.preventDefault()
+        togglePlay()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [hasFile, togglePlay])
+
   const canShare = /Mobi|Android/i.test(navigator.userAgent)
 
   const infoText = hasFile && state.workingBuffer
