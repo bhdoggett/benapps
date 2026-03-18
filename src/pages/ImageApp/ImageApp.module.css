@@ -50,9 +50,24 @@
 .fileMeta {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.closeBtn:hover {
+  color: var(--fg);
 }
 
 .fileInfo {

@@ -4,7 +4,6 @@ import BackLink from '../../components/BackLink'
 import RangeSlider from '../../components/RangeSlider'
 import AppHeader from '../../components/AppHeader'
 import DropZone from '../../components/DropZone'
-import ActionButton from '../../components/ActionButton'
 import ConvertButton from '../../components/ConvertButton'
 import CropOverlay from './CropOverlay'
 import { applyTransforms, exportAsPdf, defaultTransforms, renderRemovedBg } from './imageTransforms'
@@ -240,7 +239,7 @@ const [state, dispatch] = useReducer(reducer, initial)
               <span className={styles.fileName}>{current.fileName}</span>
               <span className={styles.fileDims}>&nbsp;·&nbsp;{current.img.naturalWidth}&nbsp;×&nbsp;{current.img.naturalHeight}</span>
             </div>
-            <ActionButton onClick={() => dispatch({ type: 'RESET' })} muted>reset</ActionButton>
+            <button className={styles.closeBtn} onClick={() => dispatch({ type: 'RESET' })}>×</button>
           </div>
 
           <div className={styles.previewWrap}>
