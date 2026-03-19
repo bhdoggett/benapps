@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import styles from './ListApp.module.css'
 
@@ -157,7 +156,6 @@ export default function ListApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader
         title="list"
         meta={<div className={styles.headerMeta}><span>{metaText}</span></div>}

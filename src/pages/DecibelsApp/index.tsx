@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import styles from './DecibelsApp.module.css'
 
@@ -112,7 +111,6 @@ export default function DecibelsApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="decibels" />
 
       {status === 'requesting' && (

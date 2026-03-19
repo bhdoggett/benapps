@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Outlet, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
 import ListApp from './pages/ListApp'
 import CountApp from './pages/CountApp'
@@ -13,11 +13,17 @@ import MetronomeApp from './pages/MetronomeApp'
 import ErrorBoundary, { RouteErrorFallback } from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
 import ThemeToggle from './components/ThemeToggle'
+import BackLink from './components/BackLink'
+import styles from './App.module.css'
 
 function Layout() {
+  const { pathname } = useLocation()
   return (
     <>
-      <ThemeToggle />
+      <div className={styles.topBar}>
+        {pathname !== '/' ? <BackLink /> : <span />}
+        <ThemeToggle />
+      </div>
       <Outlet />
     </>
   )

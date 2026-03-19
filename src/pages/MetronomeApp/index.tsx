@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
-import BackLink from '../../components/BackLink'
 import styles from './MetronomeApp.module.css'
 
 const LOOKAHEAD_MS = 25
@@ -149,7 +148,6 @@ export default function MetronomeApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="metronome" />
 
       <div className={styles.content}>

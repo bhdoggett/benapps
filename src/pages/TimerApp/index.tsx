@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
-import BackLink from '../../components/BackLink'
 import styles from './TimerApp.module.css'
 
 type TimerMode = 'idle' | 'running' | 'paused' | 'done'
@@ -141,7 +140,6 @@ export default function TimerApp() {
 
     return (
       <div className={styles.overlay}>
-        <div className={styles.overlayBack}><BackLink /></div>
         <div className={styles.timerInner}>
           <div className={styles.labelRow}>
             <div className={styles.presetLabel}>{label}</div>
@@ -172,7 +170,6 @@ export default function TimerApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="timer" />
       <div className={styles.section}>
         <div className={styles.sectionLabel}>countdown</div>

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import styles from './TunerApp.module.css'
 
@@ -252,7 +251,6 @@ export default function TunerApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="tuner" />
 
       <div className={styles.modeRow}>

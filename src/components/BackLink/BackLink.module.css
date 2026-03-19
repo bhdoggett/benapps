@@ -1,23 +1,12 @@
 .backLink {
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
   font-size: 0.65rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--muted);
   text-decoration: none;
   transition: color 0.15s;
-  z-index: 10;
 }
 
 .backLink:hover {
   color: var(--fg);
-}
-
-@media (min-width: 640px) {
-  .backLink {
-    position: fixed;
-    left: 2rem;
-  }
 }

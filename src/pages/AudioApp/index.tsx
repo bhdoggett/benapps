@@ -1,5 +1,4 @@
 import { useReducer, useRef, useCallback, useEffect } from 'react'
-import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import DropZone from '../../components/DropZone'
 import ConvertButton from '../../components/ConvertButton'
@@ -437,7 +436,6 @@ export default function AudioApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="audio" />
 
       {!hasFile && !state.statusVisible && !state.recording && (

@@ -1,6 +1,5 @@
 import { useReducer, useRef, useEffect } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
-import BackLink from '../../components/BackLink'
 import RangeSlider from '../../components/RangeSlider'
 import AppHeader from '../../components/AppHeader'
 import DropZone from '../../components/DropZone'
@@ -228,7 +227,6 @@ const [state, dispatch] = useReducer(reducer, initial)
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="image" />
       {!current && <DropZone accept="image/*" onFile={loadFile} label="drop image here" />}
       {error && <p className={styles.errorMsg}>{error}</p>}

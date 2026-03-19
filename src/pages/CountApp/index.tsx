@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import styles from './CountApp.module.css'
 
@@ -8,7 +7,6 @@ export default function CountApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="count" />
       <div className={styles.display}>{count}</div>
       <div className={styles.btnRow}>

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import BackLink from '../../components/BackLink'
 import AppHeader from '../../components/AppHeader'
 import styles from './LocationApp.module.css'
 
@@ -32,7 +31,6 @@ export default function LocationApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <AppHeader title="location" />
 
       {status === 'success' && coords ? (

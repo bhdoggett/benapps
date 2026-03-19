@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import BackLink from "../../components/BackLink";
 import AppHeader from "../../components/AppHeader";
 import ActionButton from "../../components/ActionButton";
 import styles from "./TextApp.module.css";
@@ -50,7 +49,6 @@ export default function TextApp() {
 
   return (
     <div className={styles.app}>
-      <BackLink />
       <div className={styles.header}>
         <AppHeader title="text" />
       </div>

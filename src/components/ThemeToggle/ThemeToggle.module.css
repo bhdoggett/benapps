@@ -1,18 +1,9 @@
 .toggle {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
   width: 1rem;
   height: 1rem;
   background: var(--fg);
   border: none;
   cursor: pointer;
-  z-index: 1000;
   padding: 0;
-}
-
-@media (min-width: 640px) {
-  .toggle {
-    position: fixed;
-  }
+  flex-shrink: 0;
 }
