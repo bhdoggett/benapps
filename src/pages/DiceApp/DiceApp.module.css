@@ -76,6 +76,8 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 2rem;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   min-height: 5rem;
   align-items: center;
 }
@@ -84,13 +86,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.dieWrapRolling {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: shake 0.5s ease-in-out both;
 }
 
 @keyframes shake {
@@ -109,6 +104,10 @@
   display: block;
   overflow: visible;
   filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
+}
+
+.dieRolling {
+  animation: shake 0.5s ease-in-out both;
 }
 
 .dieBody {

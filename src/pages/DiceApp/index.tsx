@@ -12,10 +12,14 @@ const PIPS: Record<number, [number, number][]> = {
   6: [[30, 30], [70, 30], [30, 50], [70, 50], [30, 70], [70, 70]],
 }
 
-function Die({ value, size }: { value: number; size: number }) {
+function Die({ value, size, rolling, animationDelay }: { value: number; size: number; rolling?: boolean; animationDelay?: string }) {
   const pips = PIPS[value]
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className={styles.die}>
+    <svg
+      width={size} height={size} viewBox="0 0 100 100"
+      className={rolling ? `${styles.die} ${styles.dieRolling}` : styles.die}
+      style={rolling && animationDelay ? { animationDelay } : undefined}
+    >
       <rect x="5" y="5" width="90" height="90" rx="5" className={styles.dieBody} />
       {pips ? (
         pips.map(([cx, cy], i) => (
@@ -288,12 +292,8 @@ export default function DiceApp() {
 
       <div className={styles.diceGrid}>
         {shown.map((val, i) => (
-          <div
-            key={i}
-            className={rolling ? styles.dieWrapRolling : styles.dieWrap}
-            style={{ animationDelay: `${i * 25}ms` }}
-          >
-            <Die value={val} size={dieSize} />
+          <div key={i} className={styles.dieWrap}>
+            <Die value={val} size={dieSize} rolling={rolling} animationDelay={`${i * 25}ms`} />
           </div>
         ))}
       </div>
