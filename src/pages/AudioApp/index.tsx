@@ -305,19 +305,6 @@ export default function AudioApp() {
     mediaRecorderRef.current?.stop()
   }
 
-  async function shareFile() {
-    if (!state.workingBuffer || !state.currentFile) return
-    const hasTrim = state.trimStart > 0 || state.trimEnd < state.workingBuffer.duration - 0.01
-    const bufToEncode = hasTrim ? trimBuffer(state.workingBuffer, state.trimStart, state.trimEnd) : state.workingBuffer
-    const blob = encodeMP3(bufToEncode)
-    const baseName = state.currentFile.name.replace(/\.[^.]+$/, '')
-    const file = new File([blob], `${baseName}.mp3`, { type: 'audio/mpeg' })
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: baseName })
-    } else {
-      download(blob, `${baseName}.mp3`)
-    }
-  }
 
   function loadFile(file: File) {
     if (!file.type.startsWith('audio/')) {
@@ -427,8 +414,6 @@ export default function AudioApp() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [hasFile, togglePlay])
-
-  const canShare = /Mobi|Android/i.test(navigator.userAgent)
 
   const infoText = hasFile && state.workingBuffer
     ? fileInfo(state.currentFile!, state.workingBuffer)
@@ -543,7 +528,7 @@ export default function AudioApp() {
               onClick={applyTransforms}
               disabled={state.buttonsDisabled}
             >
-              ▶
+              ✓
             </button>
             {hasTransforms && (
               <button
@@ -559,7 +544,6 @@ export default function AudioApp() {
           <div className={styles.convertRow}>
             <ConvertButton format="mp3" label="mp3" onClick={() => encode('mp3')} disabled={state.buttonsDisabled} />
             <ConvertButton format="wav" label="wav" onClick={() => encode('wav')} disabled={state.buttonsDisabled} />
-            {canShare && <ConvertButton format="share" label="share" onClick={shareFile} disabled={state.buttonsDisabled} />}
           </div>
         </>
       )}

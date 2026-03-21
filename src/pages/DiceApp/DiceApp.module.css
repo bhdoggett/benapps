@@ -73,6 +73,7 @@
   color: var(--fg);
   padding: 0;
   -moz-appearance: textfield;
+  transform: translateY(-0.18em);
 }
 
 .stepVal::-webkit-inner-spin-button,

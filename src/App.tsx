@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
 import ListApp from './pages/ListApp'
@@ -20,6 +21,7 @@ import styles from './App.module.css'
 
 function Layout() {
   const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return (
     <>
       <div className={styles.topBar}>
