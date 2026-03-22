@@ -1,7 +1,8 @@
 import { useReducer, useRef, useEffect, useCallback, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
 import DragNumber from '../../components/DragNumber'
-import { hexToRgb, rgbToHsl, rgbToCmyk } from './colorUtils'
+import RangeSlider from '../../components/RangeSlider'
+import { hexToRgb, rgbToHsl, rgbToCmyk, hslToRgb } from './colorUtils'
 import styles from './ColorApp.module.css'
 
 const eyeDropperSupported = 'EyeDropper' in window
@@ -48,7 +49,6 @@ type Action =
   | { type: 'CLEAR_IMAGE' }
   | { type: 'SET_COPYING'; key: string | null }
   | { type: 'ADD_STOP'; color: string; position: number }
-  | { type: 'SWAP_STOP_COLORS'; idA: number; idB: number }
   | { type: 'SELECT_STOP'; index: number | null }
   | { type: 'UPDATE_STOP_COLOR'; index: number; color: string }
   | { type: 'UPDATE_STOP_POSITION'; index: number; position: number }
@@ -69,6 +69,48 @@ type Action =
   | { type: 'SET_ACTIVE_GROUP'; index: number }
   | { type: 'SET_SOLO_GROUP'; index: number | null }
   | { type: 'SET_GROUP_OPACITY'; index: number; value: number }
+  | { type: 'LOAD_GROUPS'; groups: GradientGroup[] }
+
+// ── URL sharing ──────────────────────────────────────────────────────────────
+
+type SerializedStop = { c: string; p: number }
+type SerializedGroup = {
+  s: SerializedStop[]
+  a: number; ca: number; m: string; rs: string
+  cx: number; cy: number; sx: number; sy: number; o: number
+}
+
+function serializeGroups(groups: GradientGroup[]): string {
+  const data: SerializedGroup[] = groups.map(g => ({
+    s: g.stops.map(st => ({ c: st.color, p: st.position })),
+    a: g.angle, ca: g.conicAngle, m: g.gradientMode, rs: g.radialShape,
+    cx: g.radialCenterX, cy: g.radialCenterY, sx: g.radialSizeX, sy: g.radialSizeY,
+    o: g.opacity,
+  }))
+  // Use URL-safe base64 (no +, /, or = that can get mangled in URLs)
+  return btoa(JSON.stringify(data)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+function deserializeGroups(encoded: string): GradientGroup[] | null {
+  try {
+    // Restore URL-safe base64 to standard base64
+    const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - base64.length % 4) % 4)
+    const data: SerializedGroup[] = JSON.parse(atob(padded))
+    if (!Array.isArray(data) || data.length === 0) return null
+    return data.map(g => ({
+      stops: g.s.map(st => ({ id: newStopId(), color: st.c, position: st.p })),
+      angle: g.a ?? 90, conicAngle: g.ca ?? 0,
+      gradientMode: (g.m ?? 'linear') as GradientGroup['gradientMode'],
+      radialShape: (g.rs ?? 'circle') as GradientGroup['radialShape'],
+      radialCenterX: g.cx ?? 50, radialCenterY: g.cy ?? 50,
+      radialSizeX: g.sx ?? 50, radialSizeY: g.sy ?? 50,
+      selectedStop: null, opacity: g.o ?? 100,
+    }))
+  } catch {
+    return null
+  }
+}
 
 const defaultGroup: GradientGroup = {
   stops: [
@@ -126,18 +168,6 @@ function reducer(state: State, action: Action): State {
       const newStop = { id: newStopId(), color: action.color, position: action.position }
       const stops = [...ag.stops, newStop].sort((a, b) => a.position - b.position)
       return updateActiveGroup(state, { stops, selectedStop: stops.findIndex(s => s.id === newStop.id) })
-    }
-    case 'SWAP_STOP_COLORS': {
-      const colorA = ag.stops.find(s => s.id === action.idA)?.color
-      const colorB = ag.stops.find(s => s.id === action.idB)?.color
-      if (colorA === undefined || colorB === undefined) return state
-      const stops = ag.stops.map(s =>
-        s.id === action.idA ? { ...s, color: colorB }
-        : s.id === action.idB ? { ...s, color: colorA }
-        : s
-      )
-      const newSelectedStop = stops.findIndex(s => s.id === action.idB)
-      return updateActiveGroup(state, { stops, selectedStop: newSelectedStop })
     }
     case 'SELECT_STOP':
       return updateActiveGroup(state, { selectedStop: action.index })
@@ -225,6 +255,8 @@ function reducer(state: State, action: Action): State {
       )
       return { ...state, groups }
     }
+    case 'LOAD_GROUPS':
+      return { ...state, groups: action.groups, activeGroup: 0, soloGroup: null }
     default:
       return state
   }
@@ -265,8 +297,121 @@ function gradientCss(state: State): string {
     .join('\n\n')
 }
 
+const WHEEL_SIZE = 180
+
+function ColorWheelPicker({
+  currentColor,
+  onPick,
+}: {
+  currentColor: { r: number; g: number; b: number } | null
+  onPick: (hex: string) => void
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [lightness, setLightness] = useState(50)
+  const [hue, setHue] = useState(0)
+  const [sat, setSat] = useState(100)
+  const internalPickRef = useRef(false)
+  const R = WHEEL_SIZE / 2
+
+  // Draw wheel whenever lightness changes
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+    const imageData = ctx.createImageData(WHEEL_SIZE, WHEEL_SIZE)
+    const data = imageData.data
+    for (let y = 0; y < WHEEL_SIZE; y++) {
+      for (let x = 0; x < WHEEL_SIZE; x++) {
+        const dx = x - R, dy = y - R
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const h = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
+        const s = Math.min((dist / R) * 100, 100)
+        const [r, g, b] = hslToRgb(h, s, lightness)
+        const i = (y * WHEEL_SIZE + x) * 4
+        data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255
+      }
+    }
+    ctx.putImageData(imageData, 0, 0)
+  }, [lightness, R])
+
+  // Sync marker + lightness when color is picked externally
+  useEffect(() => {
+    if (!currentColor || internalPickRef.current) { internalPickRef.current = false; return }
+    const hsl = rgbToHsl(currentColor.r, currentColor.g, currentColor.b)
+    setHue(hsl.h)
+    setSat(hsl.s)
+    setLightness(hsl.l)
+  }, [currentColor])
+
+  // When lightness slider moves, re-emit the current hue/sat with new lightness
+  function onLightnessChange(l: number) {
+    setLightness(l)
+    const [r, g, b] = hslToRgb(hue, sat, l)
+    const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')
+    internalPickRef.current = true
+    onPick(hex)
+  }
+
+  function pickFromEvent(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const dx = ((e.clientX - rect.left) / rect.width) * WHEEL_SIZE - R
+    const dy = ((e.clientY - rect.top) / rect.height) * WHEEL_SIZE - R
+    const h = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const s = Math.min((dist / R) * 100, 100)
+    setHue(h)
+    setSat(s)
+    const [r, g, b] = hslToRgb(h, s, lightness)
+    const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')
+    internalPickRef.current = true
+    onPick(hex)
+  }
+
+  // Marker position
+  const markerRad = (hue * Math.PI) / 180
+  const markerDist = (sat / 100) * R
+  const markerX = R + markerDist * Math.cos(markerRad)
+  const markerY = R + markerDist * Math.sin(markerRad)
+
+  return (
+    <div className={styles.wheelWrap}>
+      <div />
+      <div className={styles.wheelCanvasWrap}>
+        <canvas
+          ref={canvasRef}
+          width={WHEEL_SIZE}
+          height={WHEEL_SIZE}
+          className={styles.wheelCanvas}
+          onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); pickFromEvent(e) }}
+          onPointerMove={(e) => { if (e.buttons === 0) return; pickFromEvent(e) }}
+        />
+        <div
+          className={styles.wheelMarker}
+          style={{
+            left: `${(markerX / WHEEL_SIZE) * 100}%`,
+            top: `${(markerY / WHEEL_SIZE) * 100}%`,
+          }}
+        />
+      </div>
+      <div className={styles.sliderWithLabel}>
+        <RangeSlider vertical size={100} min={0} max={100} value={lightness} onChange={onLightnessChange} />
+        <span className={styles.sliderLabel}>lightness</span>
+      </div>
+    </div>
+  )
+}
+
 export default function ColorApp() {
-  const [state, dispatch] = useReducer(reducer, initial)
+  const [state, dispatch] = useReducer(reducer, undefined, () => {
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      const groups = deserializeGroups(hash)
+      if (groups) return { ...initial, groups }
+    }
+    return initial
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const dragRef = useRef<{ currentHolderId: number } | null>(null)
@@ -283,6 +428,12 @@ export default function ColorApp() {
 
   const [conicAngleText, setConicAngleText] = useState(String(ag.conicAngle))
   const [fullscreen, setFullscreen] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
+
+  // Keep URL hash in sync with gradient state
+  useEffect(() => {
+    history.replaceState(null, '', '#' + serializeGroups(state.groups))
+  }, [state.groups])
 
   // Sync conic angle text when switching active group (DragNumber handles the rest)
   useEffect(() => {
@@ -388,63 +539,25 @@ export default function ColorApp() {
       }
     }
 
-    function checkCrossing(pos: number) {
-      if (!dragRef.current) return
-      const { currentHolderId } = dragRef.current
-      const sorted = [...stopsRef.current].sort((a, b) => a.position - b.position)
-      const holderIdx = sorted.findIndex(s => s.id === currentHolderId)
-      if (holderIdx === -1) return
-      if (holderIdx > 0) {
-        const neighbor = sorted[holderIdx - 1]
-        const mid = (neighbor.position + sorted[holderIdx].position) / 2
-        if (pos < mid) {
-          dragRef.current.currentHolderId = neighbor.id
-          dispatch({ type: 'SWAP_STOP_COLORS', idA: currentHolderId, idB: neighbor.id })
-        }
-      } else if (holderIdx < sorted.length - 1) {
-        const neighbor = sorted[holderIdx + 1]
-        const mid = (sorted[holderIdx].position + neighbor.position) / 2
-        if (pos > mid) {
-          dragRef.current.currentHolderId = neighbor.id
-          dispatch({ type: 'SWAP_STOP_COLORS', idA: currentHolderId, idB: neighbor.id })
-        }
-      }
-    }
-
-    function onMouseMove(e: MouseEvent) {
+    function onPointerMove(e: PointerEvent) {
       if (!dragRef.current) return
       didDragRef.current = true
       const bar = document.getElementById('gradient-bar')
       if (!bar) return
       const pos = posFromPoint(e.clientX, e.clientY, bar.getBoundingClientRect())
-      checkCrossing(pos)
+      const idx = stopsRef.current.findIndex(s => s.id === dragRef.current!.currentHolderId)
+      if (idx === -1) return
+      dispatch({ type: 'UPDATE_STOP_POSITION', index: idx, position: pos })
     }
-    function onMouseUp() {
+    function onPointerUp() {
       dragRef.current = null
       setTimeout(() => { didDragRef.current = false }, 0)
     }
-    function onTouchMove(e: TouchEvent) {
-      if (!dragRef.current) return
-      didDragRef.current = true
-      const bar = document.getElementById('gradient-bar')
-      if (!bar) return
-      const t = e.touches[0]
-      const pos = posFromPoint(t.clientX, t.clientY, bar.getBoundingClientRect())
-      checkCrossing(pos)
-    }
-    function onTouchEnd() {
-      dragRef.current = null
-      setTimeout(() => { didDragRef.current = false }, 0)
-    }
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-    window.addEventListener('touchmove', onTouchMove, { passive: true })
-    window.addEventListener('touchend', onTouchEnd)
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
     return () => {
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-      window.removeEventListener('touchmove', onTouchMove)
-      window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
     }
   }, [])
 
@@ -565,8 +678,10 @@ export default function ColorApp() {
       {/* ── Phase 1: Color Picker ── */}
       <div className={styles.actionRow}>
         {eyeDropperSupported ? (
-          <button className={styles.pickBtn} onClick={pickColor}>
-            pick color
+          <button className={styles.iconBtn} title="Pick color" onClick={pickColor}>
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7 7V15h3l7-7 1.146 1.146a.5.5 0 0 0 .708-.708L12.5 7.207l3.147-3.146a1.207 1.207 0 0 0 0-1.707z"/>
+            </svg>
           </button>
         ) : (
           <p className={styles.errorMsg}>
@@ -574,10 +689,14 @@ export default function ColorApp() {
           </p>
         )}
         <button
-          className={styles.uploadLink}
+          className={styles.iconBtn}
+          title="Upload image"
           onClick={() => fileInputRef.current?.click()}
         >
-          upload image
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
+          </svg>
         </button>
         <input
           ref={fileInputRef}
@@ -587,6 +706,13 @@ export default function ColorApp() {
           onChange={handleFileChange}
         />
       </div>
+
+      {!state.showCanvas && (
+        <ColorWheelPicker
+          currentColor={state.pickedColor}
+          onPick={(hex) => dispatch({ type: 'PICK_COLOR', hex })}
+        />
+      )}
 
       {state.error && <p className={styles.errorMsg}>{state.error}</p>}
 
@@ -613,18 +739,16 @@ export default function ColorApp() {
           <div className={styles.colorRow}>
             <div className={styles.swatchGroup}>
               <div />
-              <div
-                className={styles.swatch}
-                style={{ backgroundColor: `rgba(${pickedColor.r}, ${pickedColor.g}, ${pickedColor.b}, ${alpha / 100})` }}
-              />
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={alpha}
-                className={styles.alphaSlider}
-                onChange={(e) => dispatch({ type: 'SET_ALPHA', value: Number(e.target.value) })}
-              />
+              <div className={styles.swatch}>
+                <div
+                  className={styles.swatchColor}
+                  style={{ backgroundColor: `rgba(${pickedColor.r}, ${pickedColor.g}, ${pickedColor.b}, ${alpha / 100})` }}
+                />
+              </div>
+              <div className={styles.sliderWithLabel}>
+                <RangeSlider vertical size={40} min={0} max={100} value={alpha} onChange={(v) => dispatch({ type: 'SET_ALPHA', value: v })} />
+                <span className={styles.sliderLabel}>opacity</span>
+              </div>
             </div>
           </div>
 
@@ -633,7 +757,7 @@ export default function ColorApp() {
               <div
                 key={fmt.key}
                 className={[styles.colorBlock, state.copying === fmt.key ? styles.copied : ''].filter(Boolean).join(' ')}
-                onClick={() => copyValue(fmt.key, fmt.value)}
+                onPointerUp={() => copyValue(fmt.key, fmt.value)}
               >
                 <div className={styles.formatLabel}>{fmt.label}</div>
                 <div className={styles.formatValue}>
@@ -771,15 +895,10 @@ export default function ColorApp() {
         {/* Live gradient bar */}
         <div className={styles.gradientBarRow}>
         <div className={styles.gradientBarWrap}>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={ag.opacity}
-            className={styles.opacitySlider}
-            title="layer opacity"
-            onChange={(e) => dispatch({ type: 'SET_GROUP_OPACITY', index: state.activeGroup, value: Number(e.target.value) })}
-          />
+          <div className={styles.sliderWithLabel} style={{ marginRight: '0.75rem' }}>
+            <RangeSlider vertical size={180} min={0} max={100} value={ag.opacity} onChange={(v) => dispatch({ type: 'SET_GROUP_OPACITY', index: state.activeGroup, value: v })} />
+            <span className={styles.sliderLabel}>opacity</span>
+          </div>
           <div
             id="gradient-bar"
             className={styles.gradientBar}
@@ -853,12 +972,7 @@ export default function ColorApp() {
                   key={i}
                   className={[styles.stopHandle, selectedStop === i ? styles.stopSelected : ''].filter(Boolean).join(' ')}
                   style={handleStyle}
-                  onMouseDown={(e) => {
-                    e.stopPropagation()
-                    dispatch({ type: 'SELECT_STOP', index: i })
-                    handleDragStart(stop.id)
-                  }}
-                  onTouchStart={(e) => {
+                  onPointerDown={(e) => {
                     e.stopPropagation()
                     dispatch({ type: 'SELECT_STOP', index: i })
                     handleDragStart(stop.id)
@@ -1051,6 +1165,19 @@ export default function ColorApp() {
         >
           {state.gradientCopied ? 'copied' : gradCss}
         </pre>
+        <div className={styles.shareRow}>
+          <button
+            className={styles.uploadLink}
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href).then(() => {
+                setLinkCopied(true)
+                setTimeout(() => setLinkCopied(false), 1200)
+              })
+            }}
+          >
+            {linkCopied ? 'copied' : 'copy link'}
+          </button>
+        </div>
       </div>
 
       {fullscreen && (

@@ -37,3 +37,46 @@
   background: linear-gradient(to right, var(--dim), var(--fg));
   cursor: pointer;
 }
+
+/* Vertical variant */
+.vertical {
+  -webkit-appearance: none;
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 20px;
+  height: 100px;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.vertical::-webkit-slider-runnable-track {
+  width: 1px;
+  background: var(--rule);
+}
+
+.vertical::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 12px;
+  margin-left: -9.5px;
+  background: linear-gradient(to bottom, var(--dim), var(--fg));
+  cursor: pointer;
+}
+
+.vertical::-moz-range-track {
+  width: 1px;
+  background: var(--rule);
+}
+
+.vertical::-moz-range-thumb {
+  border: none;
+  border-radius: 0;
+  width: 20px;
+  height: 12px;
+  background: linear-gradient(to bottom, var(--dim), var(--fg));
+  cursor: pointer;
+}

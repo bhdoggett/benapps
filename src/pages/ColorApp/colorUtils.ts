@@ -21,6 +21,14 @@ export function rgbToHsl(r: number, g: number, b: number): { h: number; s: numbe
   return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }
 }
 
+export function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  s /= 100; l /= 100
+  const k = (n: number) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)]
+}
+
 export function rgbToCmyk(r: number, g: number, b: number): { c: number; m: number; y: number; k: number } {
   const rn = r / 255, gn = g / 255, bn = b / 255
   const k = 1 - Math.max(rn, gn, bn)
