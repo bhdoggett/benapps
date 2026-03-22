@@ -1,6 +1,7 @@
 .input {
   cursor: ns-resize;
   user-select: none;
+  touch-action: none;
   -moz-appearance: textfield;
 }
 

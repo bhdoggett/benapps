@@ -21,10 +21,10 @@ export default function DragNumber({
   step = 1,
 }: Props) {
   const [text, setText] = useState(String(value))
-  const dragRef = useRef<{ startY: number; startVal: number } | null>(null)
+  const isDragging = useRef(false)
 
   useEffect(() => {
-    if (!dragRef.current) setText(String(value))
+    if (!isDragging.current) setText(String(value))
   }, [value])
 
   return (
@@ -43,18 +43,31 @@ export default function DragNumber({
         }
       }}
       onBlur={() => setText(String(value))}
+      onWheel={(e) => e.currentTarget.blur()}
       onPointerDown={(e) => {
-        e.currentTarget.setPointerCapture(e.pointerId)
-        dragRef.current = { startY: e.clientY, startVal: value }
+        const startY = e.clientY
+        const startVal = value
+
+        const onMove = (ev: PointerEvent) => {
+          if (!isDragging.current && Math.abs(ev.clientY - startY) < 3) return
+          isDragging.current = true
+          const delta = Math.round((startY - ev.clientY) / pixelsPerUnit) * step
+          const newVal = Math.max(min, Math.min(max, startVal + delta))
+          onChange(newVal)
+          setText(String(newVal))
+        }
+
+        const onUp = () => {
+          isDragging.current = false
+          document.removeEventListener('pointermove', onMove)
+          document.removeEventListener('pointerup', onUp)
+          document.removeEventListener('pointercancel', onUp)
+        }
+
+        document.addEventListener('pointermove', onMove)
+        document.addEventListener('pointerup', onUp)
+        document.addEventListener('pointercancel', onUp)
       }}
-      onPointerMove={(e) => {
-        if (!dragRef.current) return
-        const delta = Math.round((dragRef.current.startY - e.clientY) / pixelsPerUnit) * step
-        const newVal = Math.max(min, Math.min(max, dragRef.current.startVal + delta))
-        onChange(newVal)
-        setText(String(newVal))
-      }}
-      onPointerUp={() => { dragRef.current = null }}
     />
   )
 }

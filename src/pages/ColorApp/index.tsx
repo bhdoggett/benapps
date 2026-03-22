@@ -1,4 +1,4 @@
-import { useReducer, useRef, useEffect, useCallback, useState } from 'react'
+import React, { useReducer, useRef, useEffect, useCallback, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
 import DragNumber from '../../components/DragNumber'
 import RangeSlider from '../../components/RangeSlider'
@@ -6,6 +6,11 @@ import { hexToRgb, rgbToHsl, rgbToCmyk, hslToRgb } from './colorUtils'
 import styles from './ColorApp.module.css'
 
 const eyeDropperSupported = 'EyeDropper' in window
+
+function makePickedColor(hex: string) {
+  const { r, g, b } = hexToRgb(hex)
+  return { hex, r, g, b }
+}
 const ORBIT_PX = 110
 const ORBIT_PCT = (ORBIT_PX / 260) * 100  // ~42.3% — scales with bar size
 
@@ -130,8 +135,13 @@ const defaultGroup: GradientGroup = {
   opacity: 100,
 }
 
+function randomVividHex(): string {
+  const [r, g, b] = hslToRgb(Math.random() * 360, 100, 50)
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')
+}
+
 const initial: State = {
-  pickedColor: null,
+  pickedColor: makePickedColor(randomVividHex()),
   uploadedImg: null,
   showCanvas: false,
   error: '',
@@ -321,9 +331,11 @@ const WHEEL_SIZE = 180
 function ColorWheelPicker({
   currentColor,
   onPick,
+  leftSlot,
 }: {
   currentColor: { r: number; g: number; b: number } | null
   onPick: (hex: string) => void
+  leftSlot?: React.ReactNode
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [lightness, setLightness] = useState(50)
@@ -396,7 +408,7 @@ function ColorWheelPicker({
 
   return (
     <div className={styles.wheelWrap}>
-      <div />
+      <div className={styles.wheelSlot}>{leftSlot}</div>
       <div className={styles.wheelCanvasWrap}>
         <canvas
           ref={canvasRef}
@@ -451,9 +463,12 @@ export default function ColorApp() {
   const [fullscreen, setFullscreen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
 
-  // Keep URL hash in sync with gradient state
+  // Keep URL hash in sync with gradient state (debounced to avoid replaceState rate limit)
   useEffect(() => {
-    history.replaceState(null, '', '#' + serializeGroups(state.groups))
+    const id = setTimeout(() => {
+      history.replaceState(null, '', '#' + serializeGroups(state.groups))
+    }, 300)
+    return () => clearTimeout(id)
   }, [state.groups])
 
   // Sync conic angle text when switching active group (DragNumber handles the rest)
@@ -747,82 +762,81 @@ export default function ColorApp() {
       <AppHeader title="color" />
 
       {/* ── Phase 1: Color Picker ── */}
-      <div className={styles.actionRow}>
-        {eyeDropperSupported ? (
-          <button className={styles.iconBtn} title="Pick color" onClick={pickColor}>
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-              <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7 7V15h3l7-7 1.146 1.146a.5.5 0 0 0 .708-.708L12.5 7.207l3.147-3.146a1.207 1.207 0 0 0 0-1.707z"/>
-            </svg>
-          </button>
-        ) : (
-          <p className={styles.errorMsg}>
-            eyedropper not supported in this browser — use chrome or edge
-          </p>
-        )}
-        <button
-          className={styles.iconBtn}
-          title="Upload image"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
-          </svg>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className={styles.hiddenInput}
-          onChange={handleFileChange}
-        />
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className={styles.hiddenInput}
+        onChange={handleFileChange}
+      />
 
-      {!state.showCanvas && (
-        <ColorWheelPicker
-          currentColor={state.pickedColor}
-          onPick={(hex) => dispatch({ type: 'PICK_COLOR', hex })}
-        />
-      )}
+      <div className={styles.wheelRow}>
+        {!state.showCanvas && (
+          <ColorWheelPicker
+            currentColor={state.pickedColor}
+            onPick={(hex) => dispatch({ type: 'PICK_COLOR', hex })}
+            leftSlot={
+              <div className={styles.wheelBtns}>
+                <button
+                  className={styles.iconBtn}
+                  title="Upload image"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
+                  </svg>
+                </button>
+                {eyeDropperSupported && (
+                  <button className={styles.iconBtn} title="Eyedropper" onClick={pickColor}>
+                    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                      <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7 7V15h3l7-7 1.146 1.146a.5.5 0 0 0 .708-.708L12.5 7.207l3.147-3.146a1.207 1.207 0 0 0 0-1.707z"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            }
+          />
+        )}
+
+        {state.showCanvas && state.uploadedImg && (
+          <div className={styles.previewWrap}>
+            <div className={styles.canvasWrap}>
+              <canvas
+                ref={canvasRef}
+                className={styles.canvas}
+                onClick={handleCanvasClick}
+              />
+              <button
+                className={styles.closeBtn}
+                onClick={() => dispatch({ type: 'CLEAR_IMAGE' })}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {pickedColor && (
+          <div className={styles.swatchGroup}>
+            <div className={styles.swatch}>
+              <div
+                className={styles.swatchColor}
+                style={{ backgroundColor: `rgba(${pickedColor.r}, ${pickedColor.g}, ${pickedColor.b}, ${alpha / 100})` }}
+              />
+            </div>
+            <div className={styles.sliderWithLabel}>
+              <RangeSlider vertical size={100} min={0} max={100} value={alpha} onChange={(v) => dispatch({ type: 'SET_ALPHA', value: v })} />
+              <span className={styles.sliderLabel}>opacity</span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {state.error && <p className={styles.errorMsg}>{state.error}</p>}
 
-      {state.showCanvas && state.uploadedImg && (
-        <div className={styles.previewWrap}>
-          <div className={styles.canvasWrap}>
-            <canvas
-              ref={canvasRef}
-              className={styles.canvas}
-              onClick={handleCanvasClick}
-            />
-            <button
-              className={styles.closeBtn}
-              onClick={() => dispatch({ type: 'CLEAR_IMAGE' })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-
       {pickedColor && (
         <>
-          <div className={styles.colorRow}>
-            <div className={styles.swatchGroup}>
-              <div />
-              <div className={styles.swatch}>
-                <div
-                  className={styles.swatchColor}
-                  style={{ backgroundColor: `rgba(${pickedColor.r}, ${pickedColor.g}, ${pickedColor.b}, ${alpha / 100})` }}
-                />
-              </div>
-              <div className={styles.sliderWithLabel}>
-                <RangeSlider vertical size={40} min={0} max={100} value={alpha} onChange={(v) => dispatch({ type: 'SET_ALPHA', value: v })} />
-                <span className={styles.sliderLabel}>opacity</span>
-              </div>
-            </div>
-          </div>
-
           <div className={styles.formatsGrid}>
             {formats.map((fmt) => (
               <div
@@ -873,6 +887,7 @@ export default function ColorApp() {
                 title={state.soloGroup === i ? 'show all layers' : 'focus this layer'}
                 onClick={(e) => {
                   e.stopPropagation()
+                  dispatch({ type: 'SET_ACTIVE_GROUP', index: i })
                   dispatch({ type: 'SET_SOLO_GROUP', index: state.soloGroup === i ? null : i })
                 }}
               >
@@ -916,12 +931,14 @@ export default function ColorApp() {
               )}
             </div>
           ))}
-          <button
-            className={styles.uploadLink}
-            onClick={() => dispatch({ type: 'ADD_GROUP' })}
-          >
-            + layer
-          </button>
+          {state.groups.length < 9 && (
+            <button
+              className={styles.uploadLink}
+              onClick={() => dispatch({ type: 'ADD_GROUP' })}
+            >
+              + layer
+            </button>
+          )}
         </div>
 
         <div className={styles.gradientHeader}>
