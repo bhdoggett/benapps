@@ -1,5 +1,3 @@
-import { Mp3Encoder } from 'lamejs'
-
 function toInt16(float32: Float32Array): Int16Array {
   const int16 = new Int16Array(float32.length)
   for (let i = 0; i < float32.length; i++) {
@@ -8,7 +6,8 @@ function toInt16(float32: Float32Array): Int16Array {
   return int16
 }
 
-export function encodeMP3(buffer: AudioBuffer): Blob {
+export async function encodeMP3(buffer: AudioBuffer): Promise<Blob> {
+  const { Mp3Encoder } = await import('lamejs')
   const numChannels = buffer.numberOfChannels
   const sampleRate = buffer.sampleRate
   const bitrate = 128

@@ -381,9 +381,9 @@ export default function AudioApp() {
     const hasTrim = state.trimStart > 0 || state.trimEnd < state.workingBuffer.duration - 0.01
     const bufToEncode = hasTrim ? trimBuffer(state.workingBuffer, state.trimStart, state.trimEnd) : state.workingBuffer
     dispatch({ type: 'ENCODE_START' })
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const blob = format === 'mp3' ? encodeMP3(bufToEncode) : encodeWAV(bufToEncode)
+        const blob = format === 'mp3' ? await encodeMP3(bufToEncode) : encodeWAV(bufToEncode)
         const name = state.currentFile!.name.replace(/\.[^.]+$/, '')
         download(blob, `${name}.${format}`)
         dispatch({ type: 'ENCODE_DONE', playerSrc: prevSrc })
