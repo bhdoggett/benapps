@@ -1,0 +1,66 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+}
+
+.panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-top: 1px solid var(--muted);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 401;
+  padding: 1.5rem 2rem 3rem;
+  animation: slideUp 0.2s ease-out;
+  outline: none;
+}
+
+.panelInner {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.panel p,
+.panel ul,
+.panel li {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--fg);
+}
+
+.panel p {
+  margin: 0 0 0.75rem;
+}
+
+.panel a {
+  color: var(--fg);
+  text-underline-offset: 3px;
+}
+
+.panel a:hover {
+  color: var(--muted);
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.panel li {
+  margin-bottom: 0.3rem;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

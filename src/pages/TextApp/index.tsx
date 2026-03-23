@@ -56,7 +56,16 @@ export default function TextApp() {
   return (
     <div className={styles.app}>
       <div className={styles.header}>
-        <AppHeader title="text" />
+        <AppHeader
+          title="text"
+          about={<>
+            <p>Live word, character, sentence, and read-time stats for any block of text.</p>
+            <ul>
+              <li>Paste any text into the editor to see stats update in real time</li>
+              <li>Click any stat value to copy it to the clipboard</li>
+            </ul>
+          </>}
+        />
       </div>
       <div className={styles.stats}>
         <div className={styles.stat}>

@@ -148,7 +148,16 @@ export default function MetronomeApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="metronome" />
+      <AppHeader
+        title="metronome"
+        about={<>
+          <p>Adjustable-tempo metronome with downbeat accent.</p>
+          <ul>
+            <li>Drag the BPM number up or down to change the tempo</li>
+            <li>Tap the beat square repeatedly to set tempo by feel</li>
+          </ul>
+        </>}
+      />
 
       <div className={styles.content}>
       <div className={styles.controlRow}>

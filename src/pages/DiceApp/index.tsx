@@ -275,7 +275,16 @@ export default function DiceApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="dice" />
+      <AppHeader
+        title="dice"
+        about={<>
+          <p>Roll any combination of standard dice (d4, d6, d8, d10, d12, d20).</p>
+          <ul>
+            <li>Tap a die to roll it</li>
+            <li>Drag the die count number up or down to change how many dice to roll</li>
+          </ul>
+        </>}
+      />
 
       <div className={styles.controls}>
         <div className={styles.control}>

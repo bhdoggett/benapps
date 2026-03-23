@@ -18,9 +18,12 @@ function save(items: Item[]) {
 export default function ListApp() {
   const [items, setItems] = useState<Item[]>(load)
   const [inputValue, setInputValue] = useState('')
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState('')
   const listRef = useRef<HTMLUListElement>(null)
   const dragSrcId = useRef<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { save(items) }, [items])
 
@@ -59,16 +62,58 @@ export default function ListApp() {
     }, 1500)
   }
 
+  function startEdit(item: Item, e: React.MouseEvent<HTMLSpanElement>) {
+    const clickX = e.clientX
+    const clickY = e.clientY
+    setEditingId(item.id)
+    setEditValue(item.text)
+    requestAnimationFrame(() => {
+      const input = editInputRef.current
+      if (!input) return
+      input.focus()
+      // Place cursor at the character position the user clicked
+      let offset = item.text.length
+      if ('caretPositionFromPoint' in document) {
+        const pos = (document as Document & { caretPositionFromPoint(x: number, y: number): { offset: number } | null }).caretPositionFromPoint(clickX, clickY)
+        if (pos) offset = pos.offset
+      } else if ('caretRangeFromPoint' in document) {
+        const range = (document as Document & { caretRangeFromPoint(x: number, y: number): Range | null }).caretRangeFromPoint(clickX, clickY)
+        if (range) offset = range.startOffset
+      }
+      input.setSelectionRange(offset, offset)
+    })
+  }
+
+  function commitEdit() {
+    if (editingId === null) return
+    const trimmed = editValue.trim()
+    if (trimmed) {
+      setItems(prev => prev.map(i => i.id === editingId ? { ...i, text: trimmed } : i))
+    }
+    setEditingId(null)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  function handleEditKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
+    if (e.key === 'Escape') { e.preventDefault(); cancelEdit() }
+  }
+
   // Drag-and-drop
   const handleDragStart = useCallback((e: React.DragEvent<HTMLLIElement>, id: number) => {
     const li = e.currentTarget
     if (li.classList.contains(styles.completing) || li.classList.contains(styles.removing)) {
       e.preventDefault(); return
     }
+    // Don't drag while editing
+    if (editingId !== null) { e.preventDefault(); return }
     dragSrcId.current = id
     e.dataTransfer.effectAllowed = 'move'
     setTimeout(() => li.classList.add(styles.dragging), 0)
-  }, [])
+  }, [editingId])
 
   const handleDragEnd = useCallback((_e: React.DragEvent<HTMLLIElement>) => {
     dragSrcId.current = null
@@ -159,6 +204,15 @@ export default function ListApp() {
       <AppHeader
         title="list"
         meta={<div className={styles.headerMeta}><span>{metaText}</span></div>}
+        about={<>
+          <p>A checklist that persists between visits. Add tasks, check them off, and reorder them freely.</p>
+          <ul>
+            <li>Press Enter to add a new item</li>
+            <li>Click the checkbox to remove an item</li>
+            <li>Click an item's text to edit it</li>
+            <li>Drag the grip handle to reorder</li>
+          </ul>
+        </>}
       />
 
       <ul className={styles.list} ref={listRef}>
@@ -193,7 +247,24 @@ export default function ListApp() {
                 completeItem(item.id, li)
               }}
             />
-            <span className={styles.itemText}>{item.text}</span>
+            {editingId === item.id ? (
+              <input
+                ref={editInputRef}
+                className={styles.editInput}
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={handleEditKeyDown}
+              />
+            ) : (
+              <span
+                className={styles.itemText}
+                onClick={e => startEdit(item, e)}
+                title="Click to edit"
+              >
+                {item.text}
+              </span>
+            )}
           </li>
         ))}
       </ul>

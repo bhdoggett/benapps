@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
 import ListApp from './pages/ListApp'
@@ -17,18 +17,42 @@ import ErrorBoundary, { RouteErrorFallback } from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
 import ThemeToggle from './components/ThemeToggle'
 import BackLink from './components/BackLink'
+import AboutPanel from './components/AboutPanel'
+import { AboutProvider, useAbout } from './contexts/AboutContext'
 import styles from './App.module.css'
 
 function Layout() {
   const { pathname } = useLocation()
+  const { content, isOpen, setIsOpen } = useAbout()
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+
   return (
     <>
       <div className={styles.topBar}>
         {pathname !== '/' ? <BackLink /> : <span />}
-        <ThemeToggle />
+        <div className={styles.topRight}>
+          <ThemeToggle />
+          {content && (
+            <button
+              ref={triggerRef}
+              className={styles.aboutBtn}
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? 'Close' : 'About this app'}
+              aria-expanded={isOpen}
+            >
+              {isOpen ? '×' : '?'}
+            </button>
+          )}
+        </div>
       </div>
       <Outlet />
+      {content && isOpen && (
+        <AboutPanel onClose={() => setIsOpen(false)} triggerRef={triggerRef}>
+          {content}
+        </AboutPanel>
+      )}
     </>
   )
 }
@@ -59,7 +83,9 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <ErrorBoundary>
-      <RouterProvider router={router} />
+      <AboutProvider>
+        <RouterProvider router={router} />
+      </AboutProvider>
     </ErrorBoundary>
   )
 }

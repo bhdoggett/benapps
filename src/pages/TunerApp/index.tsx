@@ -251,7 +251,16 @@ export default function TunerApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="tuner" />
+      <AppHeader
+        title="tuner"
+        about={<>
+          <p>Chromatic tuner using your microphone. Shows the nearest pitch and how far off you are.</p>
+          <ul>
+            <li>Play one note at a time for best results</li>
+            <li>The indicator shows cents sharp or flat from the nearest pitch</li>
+          </ul>
+        </>}
+      />
 
       <div className={styles.modeRow}>
         <button

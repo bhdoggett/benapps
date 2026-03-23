@@ -11,18 +11,46 @@
 }
 
 .title {
+  cursor: text;
   font-family: var(--font-display);
   font-size: clamp(4rem, 16vw, 7rem);
   font-weight: 900;
-  line-height: 0.9;
+  line-height: 0.7;
   letter-spacing: -0.03em;
-  margin-bottom: 1.2rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
 }
 
-.rule {
-  height: 1px;
-  background: var(--rule);
-  margin-bottom: 2.5rem;
+.prefixSizer {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  pointer-events: none;
+  white-space: pre;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 16vw, 7rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.prefixInput {
+  font-family: var(--font-display);
+  font-size: inherit;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: inherit;
+  color: var(--fg);
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.prefixInput::placeholder {
+  color: var(--muted);
 }
 
 .appList {

@@ -31,7 +31,17 @@ export default function LocationApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="location" />
+      <AppHeader
+        title="location"
+        about={<>
+          <p>Shows your GPS coordinates and current accuracy.</p>
+          <ul>
+            <li>Grant location permission when prompted to start</li>
+            <li>Accuracy improves over a few seconds as the GPS locks in</li>
+            <li>Tap any value to copy it to the clipboard</li>
+          </ul>
+        </>}
+      />
 
       {status === 'success' && coords ? (
         <div className={styles.coords}>

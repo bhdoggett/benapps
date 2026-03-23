@@ -111,7 +111,16 @@ export default function DecibelsApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="decibels" />
+      <AppHeader
+        title="decibels"
+        about={<>
+          <p>Real-time microphone loudness meter in dB.</p>
+          <ul>
+            <li>Grant mic permission when prompted to start measuring</li>
+            <li>The number shown is the peak dB for the current frame</li>
+          </ul>
+        </>}
+      />
 
       {status === 'requesting' && (
         <p className={styles.status}>requesting microphone...</p>

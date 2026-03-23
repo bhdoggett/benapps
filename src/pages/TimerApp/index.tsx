@@ -225,7 +225,17 @@ export default function TimerApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="timer" />
+      <AppHeader
+        title="timer"
+        about={<>
+          <p>Countdown timer and stopwatch in one.</p>
+          <ul>
+            <li>Drag the number to set a custom countdown duration</li>
+            <li>Tap a preset to quick-set common durations</li>
+            <li>Spacebar starts and pauses</li>
+          </ul>
+        </>}
+      />
       <div className={styles.section}>
         <div className={styles.sectionLabel}>countdown</div>
         <div className={styles.presetGrid}>

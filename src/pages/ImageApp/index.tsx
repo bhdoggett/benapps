@@ -227,7 +227,18 @@ const [state, dispatch] = useReducer(reducer, initial)
 
   return (
     <div className={styles.app}>
-      <AppHeader title="image" />
+      <AppHeader
+        title="image"
+        about={<>
+          <p>Crop, rotate, and apply filters to an image, then export the result.</p>
+          <ul>
+            <li>Drop a file anywhere on the page to load it</li>
+            <li>Drag the crop handles to resize the export region</li>
+            <li>Rotation bakes into the exported image</li>
+            <li>Use the filter sliders to adjust brightness, contrast, saturation, and more</li>
+          </ul>
+        </>}
+      />
       {!current && <DropZone accept="image/*" onFile={loadFile} label="drop image here" />}
       {error && <p className={styles.errorMsg}>{error}</p>}
       {current && (

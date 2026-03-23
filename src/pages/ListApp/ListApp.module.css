@@ -122,8 +122,22 @@
   position: relative;
   color: var(--fg);
   transition: color 0.35s ease;
-  cursor: default;
+  cursor: text;
   user-select: none;
+}
+
+.editInput {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--muted);
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--fg);
+  padding: 0;
+  caret-color: var(--fg);
+  line-height: 1.4;
 }
 
 .itemText::after {
