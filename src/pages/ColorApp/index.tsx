@@ -3,6 +3,7 @@ import AppHeader from '../../components/AppHeader'
 import DragNumber from '../../components/DragNumber'
 import RangeSlider from '../../components/RangeSlider'
 import { hexToRgb, rgbToHsl, rgbToCmyk, hslToRgb } from './colorUtils'
+import CssColorPicker from './CssColorPicker'
 import styles from './ColorApp.module.css'
 
 const eyeDropperSupported = 'EyeDropper' in window
@@ -427,7 +428,7 @@ function ColorWheelPicker({
         />
       </div>
       <div className={styles.sliderWithLabel}>
-        <RangeSlider vertical size={100} min={0} max={100} value={lightness} onChange={onLightnessChange} />
+        <RangeSlider vertical size={100} min={0} max={100} value={lightness} onChange={onLightnessChange} className={styles.wheelLightnessSlider} />
         <span className={styles.sliderLabel}>lightness</span>
       </div>
     </div>
@@ -459,7 +460,6 @@ export default function ColorApp() {
   const ag = state.groups[state.activeGroup]
   stopsRef.current = ag.stops
 
-  const [conicAngleText, setConicAngleText] = useState(String(ag.conicAngle))
   const [fullscreen, setFullscreen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
 
@@ -471,10 +471,6 @@ export default function ColorApp() {
     return () => clearTimeout(id)
   }, [state.groups])
 
-  // Sync conic angle text when switching active group (DragNumber handles the rest)
-  useEffect(() => {
-    setConicAngleText(String(state.groups[state.activeGroup].conicAngle))
-  }, [state.activeGroup]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Draw uploaded image onto canvas
   useEffect(() => {
@@ -777,6 +773,7 @@ export default function ColorApp() {
             onPick={(hex) => dispatch({ type: 'PICK_COLOR', hex })}
             leftSlot={
               <div className={styles.wheelBtns}>
+                <CssColorPicker onPick={(hex) => dispatch({ type: 'PICK_COLOR', hex })} />
                 <button
                   className={styles.iconBtn}
                   title="Upload image"
@@ -826,7 +823,7 @@ export default function ColorApp() {
               />
             </div>
             <div className={styles.sliderWithLabel}>
-              <RangeSlider vertical size={100} min={0} max={100} value={alpha} onChange={(v) => dispatch({ type: 'SET_ALPHA', value: v })} />
+              <RangeSlider vertical size={72} min={0} max={100} value={alpha} onChange={(v) => dispatch({ type: 'SET_ALPHA', value: v })} className={styles.swatchOpacitySlider} />
               <span className={styles.sliderLabel}>opacity</span>
             </div>
           </div>
@@ -911,7 +908,7 @@ export default function ColorApp() {
                 }}
                 onDragEnd={() => { groupDragSrc.current = null }}
               >layer {i + 1}</span>
-              <span onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onDragStart={(e) => e.stopPropagation()}>
+              <span className={styles.layerOpacityWrap} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onDragStart={(e) => e.stopPropagation()}>
                 <DragNumber
                   value={state.groups[i].opacity}
                   min={0}
@@ -982,20 +979,13 @@ export default function ColorApp() {
           {gradientMode === 'conic' && (
             <label className={styles.angleLabel}>
               <span className={styles.formatLabel}>from</span>
-              <input
-                type="number"
+              <DragNumber
+                value={conicAngle}
                 min={0}
                 max={360}
-                value={conicAngleText}
+                pixelsPerUnit={1}
                 className={styles.angleInput}
-                onChange={(e) => {
-                  setConicAngleText(e.target.value)
-                  const n = Number(e.target.value)
-                  if (e.target.value !== '' && !isNaN(n)) {
-                    dispatch({ type: 'SET_CONIC_ANGLE', angle: n })
-                  }
-                }}
-                onBlur={() => setConicAngleText(String(conicAngle))}
+                onChange={(v) => dispatch({ type: 'SET_CONIC_ANGLE', angle: v })}
               />
             </label>
           )}
@@ -1005,8 +995,8 @@ export default function ColorApp() {
         {/* Live gradient bar */}
         <div className={styles.gradientBarRow}>
         <div className={styles.gradientBarWrap}>
-          <div className={styles.sliderWithLabel} style={{ marginRight: '0.75rem' }}>
-            <RangeSlider vertical size={180} min={0} max={100} value={ag.opacity} onChange={(v) => dispatch({ type: 'SET_GROUP_OPACITY', index: state.activeGroup, value: v })} />
+          <div className={`${styles.sliderWithLabel} ${styles.gradientBarSlider}`}>
+            <RangeSlider vertical size={180} min={0} max={100} value={ag.opacity} onChange={(v) => dispatch({ type: 'SET_GROUP_OPACITY', index: state.activeGroup, value: v })} className={styles.gradientOpacitySlider} />
             <span className={styles.sliderLabel}>opacity</span>
           </div>
           <div
@@ -1215,7 +1205,7 @@ export default function ColorApp() {
                   if (row) setTimeout(() => row.classList.add(styles.dragging), 0)
                 }}
               >⠿</span>
-              <span className={styles.formatLabel}>stop {i + 1}</span>
+              <span className={styles.formatLabel}>{i + 1}</span>
               <input
                 type="color"
                 value={stop.color}

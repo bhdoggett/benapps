@@ -77,8 +77,9 @@
 }
 
 .wheelWrap {
+  --wheel-size: clamp(100px, calc(100vw - 14rem), 180px);
   display: grid;
-  grid-template-columns: 2.4rem 180px 20px;
+  grid-template-columns: 2.4rem var(--wheel-size) 20px;
   gap: 0.6rem;
   align-items: center;
 }
@@ -102,11 +103,15 @@
 }
 
 .wheelCanvas {
-  width: 180px;
-  height: 180px;
+  width: var(--wheel-size, 180px);
+  height: var(--wheel-size, 180px);
   cursor: crosshair;
   touch-action: none;
   display: block;
+}
+
+.wheelLightnessSlider {
+  height: var(--wheel-size) !important;
 }
 
 .wheelMarker {
@@ -186,8 +191,8 @@
 }
 
 .swatch {
-  width: 100px;
-  height: 100px;
+  width: var(--swatch-size, 100px);
+  height: var(--swatch-size, 100px);
   border: 1px solid var(--rule);
   background-color: #ffffff;
   background-image:
@@ -206,10 +211,15 @@
 }
 
 .swatchGroup {
+  --swatch-size: clamp(56px, calc(55.56vw - 7.78rem), 100px);
   display: grid;
-  grid-template-columns: 100px 20px;
+  grid-template-columns: var(--swatch-size, 100px) 20px;
   gap: 0.6rem;
   align-items: center;
+}
+
+.swatchOpacitySlider {
+  height: var(--swatch-size, 100px) !important;
 }
 
 
@@ -326,13 +336,30 @@
 
 .gradientBar {
   position: relative;
-  width: 260px;
-  height: 260px;
+  /* 11rem ≈ 4rem app-padding + 1.25rem slider + 1.35rem spacing + ~4.4rem breathing room */
+  width: min(260px, calc(100vw - 12rem));
+  height: min(260px, calc(100vw - 12rem));
   cursor: crosshair;
   border-radius: 2px;
   flex-shrink: 0;
   background-color: #ffffff;
   touch-action: none;
+}
+
+.gradientBarSlider {
+  margin-right: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .gradientBarSlider {
+    margin-right: 0.25rem;
+  }
+}
+
+.gradientOpacitySlider {
+  /* Larger slack than the bar so the slider actually scales on 375px phones
+     (slider cap 180px < bar formula result at -11rem, so needs -13rem to kick in). */
+  height: min(180px, calc(100vw - 15rem)) !important;
 }
 
 .fullscreenBtn {
@@ -471,6 +498,13 @@
     gap: 1rem;
   }
 
+  .stopControls {
+    row-gap: 0.6rem;
+  }
+
+  .gradientControls {
+    gap: 1.5rem;
+  }
 }
 
 .angleLabel {
@@ -543,13 +577,6 @@
   padding-top: 0.2rem;
 }
 
-@media (max-width: 430px) {
-  .gradientBar {
-    width: 162px;
-    height: 162px;
-  }
-
-}
 
 /* Layer tabs */
 .layerTabs {
@@ -683,4 +710,119 @@
   margin-top: 0.75rem;
   display: flex;
   justify-content: flex-end;
+}
+
+/* ── CSS Named Color Picker ── */
+.cssPickerWrap {
+  position: relative;
+}
+
+.cssPickerA {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.cssPickerDropdown {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 0;
+  z-index: 100;
+  width: 180px;
+  background: var(--bg);
+  border: 1px solid var(--dim);
+  display: flex;
+  flex-direction: column;
+}
+
+.cssPickerInput {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--dim);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 0.4rem 0.6rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cssPickerInput::placeholder {
+  color: var(--dim);
+}
+
+.cssPickerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.cssPickerItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.cssPickerItem:hover {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.cssPickerSwatch {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--rule);
+}
+
+.cssPickerName {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cssPickerEmpty {
+  padding: 0.5rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  text-transform: uppercase;
+}
+
+.cssPickerItemActive {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+@media (max-width: 480px) {
+  .layerOpacityWrap,
+  .layerOpacityUnit {
+    display: none;
+  }
+
+  .iconBtn {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .sliderWithLabel .sliderLabel {
+    display: none;
+  }
+
+  .wheelWrap {
+    grid-template-columns: 1.8rem var(--wheel-size) 20px;
+    gap: 0.4rem;
+  }
 }

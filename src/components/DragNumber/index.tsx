@@ -21,6 +21,7 @@ export default function DragNumber({
   step = 1,
 }: Props) {
   const [text, setText] = useState(String(value))
+  const inputRef = useRef<HTMLInputElement>(null)
   const isDragging = useRef(false)
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function DragNumber({
       max={max}
       step={step}
       value={text}
+      ref={inputRef}
       className={[styles.input, className].filter(Boolean).join(' ')}
       onChange={(e) => {
         setText(e.target.value)
@@ -45,6 +47,10 @@ export default function DragNumber({
       onBlur={() => setText(String(value))}
       onWheel={(e) => e.currentTarget.blur()}
       onPointerDown={(e) => {
+        // Prevent the browser from auto-focusing the input on touch — we'll
+        // focus manually on tap so drags don't trigger iOS zoom-on-focus.
+        e.preventDefault()
+
         const startY = e.clientY
         const startVal = value
 
@@ -58,10 +64,18 @@ export default function DragNumber({
         }
 
         const onUp = () => {
+          const wasDragging = isDragging.current
           isDragging.current = false
           document.removeEventListener('pointermove', onMove)
           document.removeEventListener('pointerup', onUp)
           document.removeEventListener('pointercancel', onUp)
+          if (!wasDragging) {
+            // Tap without drag — focus so the user can type (browser zooms as normal)
+            inputRef.current?.focus()
+          } else {
+            // Drag — ensure no stray focus that would trigger iOS zoom
+            inputRef.current?.blur()
+          }
         }
 
         document.addEventListener('pointermove', onMove)
