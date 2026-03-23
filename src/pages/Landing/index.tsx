@@ -99,6 +99,7 @@ export default function Landing() {
             onKeyDown={handleKeyDown}
             placeholder="_"
             maxLength={20}
+            autoCapitalize="none"
             aria-label="Customize title"
           />
           <span className={styles.appsSpan}>apps</span>
