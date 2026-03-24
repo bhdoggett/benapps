@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import AppHeader from '../../components/AppHeader'
+import StatusMessage from '../../components/StatusMessage'
 import styles from './ListApp.module.css'
 
 const STORAGE_KEY = 'list_v1_items'
@@ -20,12 +21,29 @@ export default function ListApp() {
   const [inputValue, setInputValue] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [copied, setCopied] = useState(false)
   const listRef = useRef<HTMLUListElement>(null)
   const dragSrcId = useRef<number | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const editInputRef = useRef<HTMLTextAreaElement>(null)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { save(items) }, [items])
+
+  // Auto-resize textareas
+  useLayoutEffect(() => {
+    const ta = editInputRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }, [editValue])
+
+  useLayoutEffect(() => {
+    const ta = inputRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }, [inputValue])
 
   const metaText = items.length === 0 ? 'empty' : items.length === 1 ? '1 item' : `${items.length} items`
 
@@ -40,7 +58,6 @@ export default function ListApp() {
     e.preventDefault()
     if (addItem(inputValue)) {
       setInputValue('')
-      // Animate first item
       requestAnimationFrame(() => {
         const first = listRef.current?.querySelector('li')
         if (first) {
@@ -68,10 +85,9 @@ export default function ListApp() {
     setEditingId(item.id)
     setEditValue(item.text)
     requestAnimationFrame(() => {
-      const input = editInputRef.current
-      if (!input) return
-      input.focus()
-      // Place cursor at the character position the user clicked
+      const ta = editInputRef.current
+      if (!ta) return
+      ta.focus()
       let offset = item.text.length
       if ('caretPositionFromPoint' in document) {
         const pos = (document as Document & { caretPositionFromPoint(x: number, y: number): { offset: number } | null }).caretPositionFromPoint(clickX, clickY)
@@ -80,7 +96,7 @@ export default function ListApp() {
         const range = (document as Document & { caretRangeFromPoint(x: number, y: number): Range | null }).caretRangeFromPoint(clickX, clickY)
         if (range) offset = range.startOffset
       }
-      input.setSelectionRange(offset, offset)
+      ta.setSelectionRange(offset, offset)
     })
   }
 
@@ -102,13 +118,32 @@ export default function ListApp() {
     if (e.key === 'Escape') { e.preventDefault(); cancelEdit() }
   }
 
+  function exportTxt() {
+    const text = items.map(i => `- ${i.text}`).join('\n')
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'list.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function copyList() {
+    const text = items.map(i => `- ${i.text}`).join('\n')
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 1200)
+    })
+  }
+
   // Drag-and-drop
   const handleDragStart = useCallback((e: React.DragEvent<HTMLLIElement>, id: number) => {
     const li = e.currentTarget
     if (li.classList.contains(styles.completing) || li.classList.contains(styles.removing)) {
       e.preventDefault(); return
     }
-    // Don't drag while editing
     if (editingId !== null) { e.preventDefault(); return }
     dragSrcId.current = id
     e.dataTransfer.effectAllowed = 'move'
@@ -203,7 +238,28 @@ export default function ListApp() {
     <div className={styles.app}>
       <AppHeader
         title="list"
-        meta={<div className={styles.headerMeta}><span>{metaText}</span></div>}
+        meta={
+          <div className={styles.headerMeta}>
+            <span>{metaText}</span>
+            {items.length > 0 && (
+              <div className={styles.exportRow}>
+                <button className={styles.iconBtn} onClick={exportTxt} title="Download .txt" aria-label="Download as text file">
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7.5 2v8M4.5 7l3 3 3-3" />
+                    <path d="M2 12h11" />
+                  </svg>
+                </button>
+                <button className={styles.iconBtn} onClick={copyList} title="Copy to clipboard" aria-label="Copy list">
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="4" width="8" height="9" rx="1" />
+                    <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
+                  </svg>
+                </button>
+                <StatusMessage message="copied!" visible={copied} />
+              </div>
+            )}
+          </div>
+        }
         about={<>
           <p>A checklist that persists between visits. Add tasks, check them off, and reorder them freely.</p>
           <ul>
@@ -211,9 +267,29 @@ export default function ListApp() {
             <li>Click the checkbox to remove an item</li>
             <li>Click an item's text to edit it</li>
             <li>Drag the grip handle to reorder</li>
+            <li>Download the list as a .txt file or copy it to the clipboard using the icons next to the item count</li>
           </ul>
         </>}
       />
+
+      <form className={styles.addForm} onSubmit={handleSubmit}>
+        <div className={styles.addFormInner}>
+          <span className={styles.dragHandle} aria-hidden style={{ visibility: 'hidden' }}>⠿</span>
+          <span className={styles.addPrompt}>+</span>
+          <textarea
+            ref={inputRef}
+            className={styles.addInput}
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            placeholder="add item…"
+            rows={1}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e as unknown as React.FormEvent) }
+            }}
+          />
+          <button type="submit" className={styles.addBtn}>add</button>
+        </div>
+      </form>
 
       <ul className={styles.list} ref={listRef}>
         {items.length === 0 && (
@@ -222,7 +298,7 @@ export default function ListApp() {
         {items.map(item => (
           <li
             key={item.id}
-            className={styles.listItem}
+            className={[styles.listItem, editingId === item.id ? styles.editing : ''].filter(Boolean).join(' ')}
             data-id={item.id}
             draggable
             onDragStart={e => handleDragStart(e, item.id)}
@@ -248,13 +324,14 @@ export default function ListApp() {
               }}
             />
             {editingId === item.id ? (
-              <input
+              <textarea
                 ref={editInputRef}
                 className={styles.editInput}
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 onBlur={commitEdit}
                 onKeyDown={handleEditKeyDown}
+                rows={1}
               />
             ) : (
               <span
@@ -269,19 +346,6 @@ export default function ListApp() {
         ))}
       </ul>
 
-      <form className={styles.addForm} onSubmit={handleSubmit}>
-        <div className={styles.addFormInner}>
-          <span className={styles.addPrompt}>+</span>
-          <input
-            ref={inputRef}
-            className={styles.addInput}
-            value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
-            placeholder="add item…"
-          />
-          <button type="submit" className={styles.addBtn}>add</button>
-        </div>
-      </form>
     </div>
   )
 }
