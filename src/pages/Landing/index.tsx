@@ -22,6 +22,7 @@ const apps = [
   { path: "/timer", name: "timer" },
   { path: "/location", name: "location" },
   { path: "/dice", name: "dice" },
+  { path: "/draw", name: "draw" },
 ];
 
 export default function Landing() {

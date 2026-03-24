@@ -13,6 +13,7 @@ import TunerApp from './pages/TunerApp'
 import MetronomeApp from './pages/MetronomeApp'
 import ColorApp from './pages/ColorApp'
 import DiceApp from './pages/DiceApp'
+import DrawApp from './pages/DrawApp'
 import ErrorBoundary, { RouteErrorFallback } from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
 import ThemeToggle from './components/ThemeToggle'
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
       { path: '/metronome', element: <MetronomeApp /> },
       { path: '/color', element: <ColorApp /> },
       { path: '/dice', element: <DiceApp /> },
+      { path: '/draw', element: <DrawApp /> },
       { path: '*', element: <NotFound /> },
     ],
   },
