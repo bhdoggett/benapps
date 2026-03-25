@@ -15,14 +15,14 @@
 }
 
 .aboutBtn {
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   border-radius: 50%;
   background: var(--bg);
   border: 1px solid var(--dim);
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
   display: flex;

@@ -6,6 +6,7 @@ interface Props {
   min: number
   max: number
   onChange: (value: number) => void
+  onCommit?: (value: number) => void
   className?: string
   pixelsPerUnit?: number
   step?: number
@@ -16,6 +17,7 @@ export default function DragNumber({
   min,
   max,
   onChange,
+  onCommit,
   className,
   pixelsPerUnit = 1.5,
   step = 1,
@@ -23,6 +25,7 @@ export default function DragNumber({
   const [text, setText] = useState(String(value))
   const inputRef = useRef<HTMLInputElement>(null)
   const isDragging = useRef(false)
+  const dragFinalVal = useRef(value)
 
   useEffect(() => {
     if (!isDragging.current) setText(String(value))
@@ -44,7 +47,7 @@ export default function DragNumber({
           onChange(Math.max(min, Math.min(max, n)))
         }
       }}
-      onBlur={() => setText(String(value))}
+      onBlur={() => { setText(String(value)); onCommit?.(value) }}
       onWheel={(e) => e.currentTarget.blur()}
       onPointerDown={(e) => {
         // Prevent the browser from auto-focusing the input on touch — we'll
@@ -59,6 +62,7 @@ export default function DragNumber({
           isDragging.current = true
           const delta = Math.round((startY - ev.clientY) / pixelsPerUnit) * step
           const newVal = Math.max(min, Math.min(max, startVal + delta))
+          dragFinalVal.current = newVal
           onChange(newVal)
           setText(String(newVal))
         }
@@ -75,6 +79,7 @@ export default function DragNumber({
           } else {
             // Drag — ensure no stray focus that would trigger iOS zoom
             inputRef.current?.blur()
+            onCommit?.(dragFinalVal.current)
           }
         }
 

@@ -18,10 +18,56 @@
   gap: 0.75rem;
 }
 
-.toolGroup,
+.toolbarRowGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+}
+
+.canvasSizeGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.cropCol {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .historyGroup {
   display: flex;
   gap: 0.25rem;
+}
+
+.sizePresets {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.sizeDot {
+  background: none;
+  border: none;
+  padding: 0;
+  width: 1.55rem;
+  height: 1.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--dim);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.sizeDot:hover {
+  color: var(--muted);
+}
+
+.sizeDot.sizeDotActive {
+  color: var(--fg);
 }
 
 .toolBtn {
@@ -73,7 +119,6 @@
   align-items: center;
   gap: 0.25rem;
   flex: 1;
-  justify-content: center;
 }
 
 .rightGroup {
@@ -153,6 +198,17 @@
   gap: 0.5rem;
 }
 
+.canvasSizeInput {
+  background: none;
+  border: 1px solid var(--dim);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 0.35rem 0.4rem;
+  width: 3.2rem;
+}
+
 .label {
   font-family: var(--font-mono);
   font-size: 0.55rem;
@@ -209,12 +265,12 @@
 
 .canvasWrap {
   position: relative;
+  max-width: 100%;
 }
 
 .canvas {
   display: block;
   width: 100%;
-  aspect-ratio: 1240 / 840;
   background: white;
   border: 1px solid var(--rule);
   border-radius: 4px;
@@ -227,6 +283,25 @@
   width: 100%;
   height: 100%;
   border-radius: 4px;
+}
+
+.resizeHandle {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  cursor: nwse-resize;
+  color: var(--dim);
+  transition: color 0.15s;
+  touch-action: none;
+}
+
+.resizeHandle:hover {
+  color: var(--muted);
 }
 
 .cropHint {
