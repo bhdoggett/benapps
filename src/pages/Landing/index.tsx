@@ -61,6 +61,18 @@ export default function Landing() {
   } | null>(null);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+
+    root.style.zoom = "";
+    body.style.zoom = "";
+    root.style.transform = "";
+    body.style.transform = "";
+    root.style.transformOrigin = "";
+    body.style.transformOrigin = "";
+  }, []);
+
+  useEffect(() => {
     setContent(
       <>
         <p>
