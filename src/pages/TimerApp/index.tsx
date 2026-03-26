@@ -105,13 +105,16 @@ export default function TimerApp() {
   }, [])
 
   useEffect(() => {
-    if (timer.mode !== 'running') return
+    const shouldTick = timer.mode === 'running' || (timer.mode === 'done' && timer.type === 'countdown')
+    if (!shouldTick) return
     const id = setInterval(() => {
       setTick(t => t + 1)
       if (timer.type === 'countdown') {
-        const elapsed = getElapsed(timer)
-        if (elapsed >= timer.totalMs) {
-          setTimer(prev => ({ ...prev, mode: 'done', accumulatedMs: prev.totalMs }))
+        if (timer.mode === 'running') {
+          const elapsed = getElapsed(timer)
+          if (elapsed >= timer.totalMs) {
+            setTimer(prev => ({ ...prev, mode: 'done', accumulatedMs: prev.totalMs }))
+          }
         }
       }
     }, 100)
@@ -234,6 +237,19 @@ export default function TimerApp() {
     })
   }
 
+  function startCountdownSeconds(seconds: number) {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+    setTimer({
+      mode: 'running',
+      type: 'countdown',
+      totalMs: seconds * 1000,
+      startedAt: Date.now(),
+      accumulatedMs: 0,
+    })
+  }
+
   function startStopwatch() {
     setTimer({
       mode: 'running',
@@ -280,6 +296,17 @@ export default function TimerApp() {
     setLaps([])
   }
 
+  function restartCountdown() {
+    setTimer(prev => ({
+      ...prev,
+      mode: 'running',
+      type: 'countdown',
+      startedAt: Date.now(),
+      accumulatedMs: 0,
+    }))
+    setLaps([])
+  }
+
   if (timer.mode !== 'idle') {
     const elapsed = getElapsed(timer)
     const isDone = timer.mode === 'done'
@@ -288,6 +315,9 @@ export default function TimerApp() {
     const currentLapMs = elapsed - lapOffset
     const displayMs = timer.type === 'countdown' ? timer.totalMs - elapsed : currentLapMs
     const timeStr = isDone ? '00:00' : formatTime(displayMs, timer.type === 'stopwatch')
+    const overtimeMs = isDone && timer.type === 'countdown'
+      ? Math.max(0, Date.now() - (timer.startedAt + timer.totalMs))
+      : 0
     const showFocusMode = timer.type === 'countdown' && isLandscapeMobile
 
     const label = timer.type === 'countdown'
@@ -327,26 +357,37 @@ export default function TimerApp() {
               {renderTimeCharacters(formatTime(elapsed, true), styles)}
             </div>
           )}
-          {!isDone && (
-            <div className={styles.controlRow}>
-              <button
-                className={styles.controlBtn}
-                onClick={timer.mode === 'running' ? pause : resume}
-              >
-                {timer.mode === 'running' ? 'pause' : 'resume'}
-              </button>
-              {label === 'stopwatch' && timer.mode === 'running' && (
-                <button className={styles.controlBtn} onClick={lap}>
-                  lap
-                </button>
-              )}
-              {label === 'stopwatch' && (
-                <button className={styles.controlBtn} onClick={reset}>
-                  reset
-                </button>
-              )}
+          {isDone && timer.type === 'countdown' && (
+            <div className={`${styles.totalTime} ${styles.overtimeTime}`}>
+              -{formatTime(overtimeMs)}
             </div>
           )}
+          <div className={styles.controlRow}>
+            {isDone ? (
+              <button className={styles.controlBtn} onClick={restartCountdown}>
+                restart
+              </button>
+            ) : (
+              <>
+                <button
+                  className={styles.controlBtn}
+                  onClick={timer.mode === 'running' ? pause : resume}
+                >
+                  {timer.mode === 'running' ? 'pause' : 'resume'}
+                </button>
+                {label === 'stopwatch' && timer.mode === 'running' && (
+                  <button className={styles.controlBtn} onClick={lap}>
+                    lap
+                  </button>
+                )}
+                {label === 'stopwatch' && (
+                  <button className={styles.controlBtn} onClick={reset}>
+                    reset
+                  </button>
+                )}
+              </>
+            )}
+          </div>
 
           {laps.length > 0 && (
             <div className={styles.lapsSection}>
@@ -399,6 +440,9 @@ export default function TimerApp() {
       <div className={styles.section}>
         <div className={styles.sectionLabel}>countdown</div>
         <div className={styles.presetGrid}>
+          <button className={styles.presetBtn} onClick={() => startCountdownSeconds(3)}>
+            3s
+          </button>
           {PRESETS.map(m => (
             <button key={m} className={styles.presetBtn} onClick={() => startCountdown(m)}>
               {m}m
