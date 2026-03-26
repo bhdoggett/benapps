@@ -14,6 +14,7 @@ import MetronomeApp from './pages/MetronomeApp'
 import ColorApp from './pages/ColorApp'
 import DiceApp from './pages/DiceApp'
 import DrawApp from './pages/DrawApp'
+import PianoApp from './pages/PianoApp'
 import ErrorBoundary, { RouteErrorFallback } from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
 import ThemeToggle from './components/ThemeToggle'
@@ -164,7 +165,7 @@ function Layout() {
 
   return (
     <>
-      <div className={`${styles.topBar} ${pathname === '/timer' ? styles.timerTopBar : ''}`}>
+      <div className={`${styles.topBar} ${pathname === '/timer' ? styles.timerTopBar : ''} ${pathname === '/piano' ? styles.pianoTopBar : ''}`}>
         {pathname !== '/' ? <BackLink /> : <span />}
         <div className={styles.topRight}>
           <ThemeToggle />
@@ -210,6 +211,7 @@ const router = createBrowserRouter([
       { path: '/color', element: <ColorApp /> },
       { path: '/dice', element: <DiceApp /> },
       { path: '/draw', element: <DrawApp /> },
+      { path: '/piano', element: <PianoApp /> },
       { path: '*', element: <NotFound /> },
     ],
   },

@@ -20,6 +20,7 @@ const apps = [
   { path: "/decibels", name: "decibels" },
   { path: "/tuner", name: "tuner" },
   { path: "/metronome", name: "metronome" },
+  { path: "/piano", name: "piano" },
   // tools & time
   { path: "/timer", name: "timer" },
   { path: "/location", name: "location" },
