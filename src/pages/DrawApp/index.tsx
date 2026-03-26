@@ -627,18 +627,37 @@ export default function DrawApp() {
     a.click()
   }
 
-  const copyPng = () => {
-    canvasRef.current!.toBlob((blob) => {
-      if (!blob) return
-      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        .then(() => {
-          dispatch({ type: 'SET_COPIED', copied: true })
-          if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
-          copiedTimerRef.current = setTimeout(() => {
-            dispatch({ type: 'SET_COPIED', copied: false })
-          }, 1200)
-        })
-    }, 'image/png')
+  const showCopiedStatus = () => {
+    dispatch({ type: 'SET_COPIED', copied: true })
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+    copiedTimerRef.current = setTimeout(() => {
+      dispatch({ type: 'SET_COPIED', copied: false })
+    }, 1200)
+  }
+
+  const copyPng = async () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    try {
+      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+        download('png')
+        return
+      }
+      // Keep Blob creation inside ClipboardItem so touch user activation is preserved.
+      const png = new ClipboardItem({
+        'image/png': new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error('Failed to export PNG'))
+          }, 'image/png')
+        }),
+      })
+      await navigator.clipboard.write([png])
+      showCopiedStatus()
+    } catch {
+      // Touch browsers may block image clipboard writes; fall back to file download.
+      download('png')
+    }
   }
 
   const r = Math.max(2, Math.round((state.brushSize * 0.45) / 2))
