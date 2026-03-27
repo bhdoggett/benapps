@@ -446,6 +446,7 @@ export default function PianoApp() {
               <li>Use the key size slider to zoom in or out.</li>
               <li>Toggle the note names button to label every key.</li>
               <li>Rotate to landscape for a distraction-free full-screen view.</li>
+              <li>Connect a MIDI controller to play with a physical keyboard. Sustain pedal supported.</li>
             </ul>
           </>}
         />
