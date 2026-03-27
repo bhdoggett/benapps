@@ -174,10 +174,6 @@ export default function PianoApp() {
     osc2.stop(now + 0.16)
   }
 
-  function noteOffAll() {
-    for (const midi of Array.from(activeOscRef.current.keys())) noteOff(midi)
-  }
-
   useEffect(() => {
     function resumeCtx() {
       if (!audioUnlockedRef.current) {
