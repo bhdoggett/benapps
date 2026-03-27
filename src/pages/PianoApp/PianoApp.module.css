@@ -64,6 +64,7 @@
 /* Piano */
 
 .pianoWrapper {
+  position: relative;
   overflow: hidden;
   height: 160px;
   touch-action: none;
@@ -79,7 +80,7 @@
 }
 
 .cursorPlay {
-  cursor: crosshair;
+  cursor: pointer;
 }
 
 .cursorScroll {
@@ -152,6 +153,33 @@
     height: 0; /* let flex: 1 determine height; avoids fighting the base 160px */
     margin: 0;
   }
+}
+
+.midiPrompt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  z-index: 10;
+}
+
+:global([data-theme="light"]) .midiPrompt {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.midiDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
 }
 
 .octaveLabel {

@@ -65,6 +65,9 @@ export default function PianoApp() {
   const [showNoteNames, setShowNoteNames] = useState(false)
   const [keyWidth, setKeyWidth] = useState(48)
   const [volume, setVolume] = useState(0.8)
+  const [midiConnected, setMidiConnected] = useState(false)
+  const [showMidiPrompt, setShowMidiPrompt] = useState(false)
+  const audioUnlockedRef = useRef(false)
 
   const audioCtxRef = useRef<AudioContext | null>(null)
   const masterGainRef = useRef<GainNode | null>(null)
@@ -176,7 +179,18 @@ export default function PianoApp() {
   }
 
   useEffect(() => {
+    function resumeCtx() {
+      if (!audioUnlockedRef.current) {
+        audioUnlockedRef.current = true
+        setShowMidiPrompt(false)
+      }
+      audioCtxRef.current?.resume()
+    }
+    document.addEventListener('pointerdown', resumeCtx)
+    document.addEventListener('keydown', resumeCtx)
     return () => {
+      document.removeEventListener('pointerdown', resumeCtx)
+      document.removeEventListener('keydown', resumeCtx)
       activeOscRef.current.forEach(({ osc1, osc2 }) => {
         try { osc1.stop(0); osc2.stop(0) } catch (_) { /* already stopped */ }
       })
@@ -184,6 +198,61 @@ export default function PianoApp() {
       audioCtxRef.current?.close()
     }
   }, [])
+
+  // ── MIDI ──────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!('requestMIDIAccess' in navigator)) return
+    let access: MIDIAccess | null = null
+    let sustained = false
+    const sustainedNotes = new Set<number>()
+
+    function handleMessage(e: MIDIMessageEvent) {
+      const data = e.data
+      if (!data || data.length < 2) return
+      const cmd = data[0] & 0xf0
+      const note = data[1]
+      const velocity = data.length > 2 ? data[2] : 0
+
+      if (cmd === 0x90 && velocity > 0) {
+        if (!audioUnlockedRef.current) { setShowMidiPrompt(true); return }
+        // Note on — if note was held by sustain, remove from sustained set (retriggered)
+        sustainedNotes.delete(note)
+        noteOn(note)
+      } else if (cmd === 0x80 || (cmd === 0x90 && velocity === 0)) {
+        // Note off — hold if sustain pedal is down
+        if (sustained) {
+          sustainedNotes.add(note)
+        } else {
+          noteOff(note)
+        }
+      } else if (cmd === 0xb0 && note === 64) {
+        // CC 64 — sustain pedal
+        sustained = velocity >= 64
+        if (!sustained) {
+          sustainedNotes.forEach(n => noteOff(n))
+          sustainedNotes.clear()
+        }
+      }
+    }
+
+    function syncInputs(acc: MIDIAccess) {
+      acc.inputs.forEach(input => { input.onmidimessage = handleMessage })
+      setMidiConnected(acc.inputs.size > 0)
+    }
+
+    navigator.requestMIDIAccess().then(acc => {
+      access = acc
+      syncInputs(acc)
+      acc.onstatechange = () => syncInputs(acc)
+    }).catch(() => {})
+
+    return () => {
+      if (!access) return
+      access.inputs.forEach(input => { input.onmidimessage = null })
+      access.onstatechange = null
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Scroll helper ─────────────────────────────────────────────────────────
 
@@ -422,12 +491,16 @@ export default function PianoApp() {
           onChange={setKeyWidth}
           className={styles.slider}
         />
+        {midiConnected && <><span className={styles.label}>midi</span><span className={styles.midiDot} /></>}
       </div>
 
       <div
         ref={pianoWrapperRef}
         className={`${styles.pianoWrapper} ${locked ? styles.cursorPlay : styles.cursorScroll}`}
       >
+        {showMidiPrompt && (
+          <div className={styles.midiPrompt}>audio playback requires a click</div>
+        )}
         <div
           ref={pianoInnerRef}
           className={styles.piano}
