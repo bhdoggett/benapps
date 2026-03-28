@@ -77,6 +77,7 @@ type Action =
   | { type: "SET_ALPHA"; value: number }
   | { type: "REORDER_STOPS"; from: number; to: number; insertBefore: boolean }
   | { type: "ADD_GROUP" }
+  | { type: "ADD_GROUP_WITH_COLOR"; hex: string; alpha: number }
   | { type: "REMOVE_GROUP"; index: number }
   | { type: "SET_ACTIVE_GROUP"; index: number }
   | { type: "SET_SOLO_GROUP"; index: number | null }
@@ -312,6 +313,19 @@ function reducer(state: State, action: Action): State {
           { id: newStopId(), color: randomHex(), position: 100 },
         ],
         opacity: 100,
+      };
+      const groups = [...state.groups, newGroup];
+      return { ...state, groups, activeGroup: groups.length - 1 };
+    }
+    case "ADD_GROUP_WITH_COLOR": {
+      const newGroup: GradientGroup = {
+        ...defaultGroup,
+        gradientMode: "solid",
+        stops: [
+          { id: newStopId(), color: action.hex, position: 0 },
+          { id: newStopId(), color: action.hex, position: 100 },
+        ],
+        opacity: action.alpha,
       };
       const groups = [...state.groups, newGroup];
       return { ...state, groups, activeGroup: groups.length - 1 };
@@ -651,6 +665,11 @@ export default function ColorApp() {
       dispatch({ type: "SET_COPYING", key });
       setTimeout(() => dispatch({ type: "SET_COPYING", key: null }), 1200);
     });
+  }
+
+  function addToNewLayer() {
+    if (!state.pickedColor) return;
+    dispatch({ type: "ADD_GROUP_WITH_COLOR", hex: state.pickedColor.hex, alpha: state.alpha });
   }
 
   function addToGradient() {
@@ -1119,7 +1138,10 @@ export default function ColorApp() {
 
           <div className={styles.addToGradientRow}>
             <button className={styles.uploadLink} onClick={addToGradient}>
-              + add to layer
+              + add to current layer
+            </button>
+            <button className={styles.uploadLink} onClick={addToNewLayer}>
+              + add to new layer
             </button>
           </div>
         </>

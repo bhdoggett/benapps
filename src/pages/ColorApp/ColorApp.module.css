@@ -188,8 +188,8 @@
 }
 
 .canvas {
-  max-width: 100%;
-  max-height: 360px;
+  max-width: min(100%, 320px);
+  max-height: 240px;
   display: block;
   cursor: crosshair;
 }
@@ -856,5 +856,22 @@
   .wheelWrap {
     grid-template-columns: 1.8rem var(--wheel-size) 20px;
     gap: 0.4rem;
+  }
+}
+
+/* ---- Focus mode (landscape on touch devices) ---- */
+
+@media (orientation: landscape) and (pointer: coarse) {
+  .app {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+
+  .gradientSection {
+    display: none;
+  }
+
+  .addToGradientRow {
+    display: none;
   }
 }
