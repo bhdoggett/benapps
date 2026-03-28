@@ -165,7 +165,7 @@ function Layout() {
 
   return (
     <>
-      <div className={`${styles.topBar} ${pathname === '/timer' ? styles.timerTopBar : ''} ${pathname === '/piano' ? styles.pianoTopBar : ''}`}>
+      <div className={`${styles.topBar} ${pathname === '/timer' ? styles.timerTopBar : ''} ${pathname === '/piano' ? styles.pianoTopBar : ''} ${pathname === '/list' ? styles.listTopBar : ''}`}>
         {pathname !== '/' ? <BackLink /> : <span />}
         <div className={styles.topRight}>
           <ThemeToggle />

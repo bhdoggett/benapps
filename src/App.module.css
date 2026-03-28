@@ -51,7 +51,8 @@
 
 @media (orientation: landscape) and (pointer: coarse) {
   .timerTopBar,
-  .pianoTopBar {
+  .pianoTopBar,
+  .listTopBar {
     display: none;
   }
 }

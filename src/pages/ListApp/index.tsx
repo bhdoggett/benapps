@@ -297,51 +297,55 @@ export default function ListApp() {
   }
 
   return (
-    <div className={`${styles.app}${zoomed ? ` ${styles.zoomed}` : ''}`}>
-      <AppHeader
-        title="list"
-        meta={
-          <div className={styles.headerMeta}>
-            <span>{metaText}</span>
-            {items.length > 0 && (
-              <div className={styles.exportRow}>
-                <button className={styles.iconBtn} onClick={exportTxt} title="Download .txt" aria-label="Download as text file">
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7.5 2v8M4.5 7l3 3 3-3" />
-                    <path d="M2 12h11" />
-                  </svg>
+    <div className={[styles.app, zoomed ? styles.zoomed : ''].filter(Boolean).join(' ')}>
+      <div className={styles.header}>
+        <AppHeader
+          title="list"
+          meta={
+            <div className={styles.headerMeta}>
+              <span>{metaText}</span>
+              <div className={styles.metaActions}>
+                <button
+                  className={`${styles.zoomBtn}${zoomed ? ` ${styles.zoomActive}` : ''}`}
+                  onClick={() => setZoomed(z => !z)}
+                  aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+                >
+                  {zoomed ? 'A−' : 'A+'}
                 </button>
-                <button className={styles.iconBtn} onClick={copyList} title="Copy to clipboard" aria-label="Copy list">
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="4" width="8" height="9" rx="1" />
-                    <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
-                  </svg>
-                </button>
-                <StatusMessage message="copied!" visible={copied} />
+                {items.length > 0 && (
+                  <>
+                    <button className={styles.iconBtn} onClick={exportTxt} title="Download .txt" aria-label="Download as text file">
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7.5 2v8M4.5 7l3 3 3-3" />
+                        <path d="M2 12h11" />
+                      </svg>
+                    </button>
+                    <button className={styles.iconBtn} onClick={copyList} title="Copy to clipboard" aria-label="Copy list">
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="5" y="4" width="8" height="9" rx="1" />
+                        <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
+                      </svg>
+                    </button>
+                    <StatusMessage message="copied!" visible={copied} />
+                  </>
+                )}
               </div>
-            )}
-            <button
-              className={`${styles.zoomBtn}${zoomed ? ` ${styles.zoomActive}` : ''}`}
-              onClick={() => setZoomed(z => !z)}
-              aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
-            >
-              {zoomed ? 'A−' : 'A+'}
-            </button>
-          </div>
-        }
-        about={<>
-          <p>A checklist that persists between visits. Add tasks, check them off, and reorder them freely.</p>
-          <ul>
-            <li>Press Enter to add a new item</li>
-            <li>Click the checkbox to remove an item</li>
-            <li>Click an item's text to edit it</li>
-            <li>Drag the grip handle to reorder</li>
-            <li>Use the icons next to the item count to download as a .txt file or copy to clipboard</li>
-            <li>Paste multi-line text into the input to import multiple items at once</li>
-            <li>Drag and drop a .txt file onto the input to import it — leading bullets and dashes are stripped automatically</li>
-          </ul>
-        </>}
-      />
+            </div>
+          }
+          about={<>
+            <p>A checklist that persists between visits. Add tasks, check them off, and reorder them freely.</p>
+            <ul>
+              <li>Press Enter to add a new item</li>
+              <li>Click the checkbox to remove an item</li>
+              <li>Click an item's text to edit it</li>
+              <li>Drag the grip handle to reorder</li>
+              <li>Use the icons next to the item count to download as a .txt file or copy to clipboard</li>
+              <li>Paste multi-line text into the input to import multiple items at once</li>
+              <li>Drag and drop a .txt file onto the input to import it — leading bullets and dashes are stripped automatically</li>
+            </ul>
+          </>}
+        />
+      </div>
 
       <form
         className={[styles.addForm, fileDragOver ? styles.addFormDragOver : ''].filter(Boolean).join(' ')}
