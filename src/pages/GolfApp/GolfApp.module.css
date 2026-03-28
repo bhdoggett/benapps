@@ -517,3 +517,12 @@
   border-color: var(--muted);
   color: var(--muted);
 }
+
+/* ---- Focus mode (landscape on touch devices) ---- */
+
+@media (orientation: landscape) and (pointer: coarse) {
+  .app {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+}
