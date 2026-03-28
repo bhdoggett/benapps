@@ -50,3 +50,9 @@ body {
 .hidden {
   display: none;
 }
+
+@media (orientation: landscape) and (pointer: coarse) {
+  .app-header {
+    display: none;
+  }
+}

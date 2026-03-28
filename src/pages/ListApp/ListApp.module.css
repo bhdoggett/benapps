@@ -15,6 +15,12 @@
   color: var(--muted);
 }
 
+.metaActions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
 /* ---- List ---- */
 
 .list {
@@ -183,14 +189,6 @@
   color: var(--muted);
 }
 
-/* ---- Export row ---- */
-
-.exportRow {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
 .iconBtn {
   background: none;
   border: none;
@@ -286,6 +284,19 @@
   background: var(--fg);
 }
 
+/* ---- Focus mode (landscape on touch devices) ---- */
+
+@media (orientation: landscape) and (pointer: coarse) {
+  .app {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+
+  .addForm {
+    display: none;
+  }
+}
+
 /* ---- Zoom toggle ---- */
 
 .zoomBtn {
@@ -293,7 +304,7 @@
   border: none;
   color: var(--dim);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   cursor: pointer;
   padding: 0;

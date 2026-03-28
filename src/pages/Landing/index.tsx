@@ -25,6 +25,7 @@ const apps = [
   { path: "/timer", name: "timer" },
   { path: "/location", name: "location" },
   { path: "/dice", name: "dice" },
+  { path: "/golf", name: "golf" },
 ];
 
 function loadStarred(): string[] {

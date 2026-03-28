@@ -22,7 +22,7 @@ export default function AppHeader({ title, meta, about }: Props) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className={styles.appHeader}>
+    <div className={`app-header ${styles.appHeader}`}>
       <h1 className={styles.appTitle}>{title}</h1>
       <div className={styles.headerRule} />
       {meta && <div className={styles.headerMeta}>{meta}</div>}

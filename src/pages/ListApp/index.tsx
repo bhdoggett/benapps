@@ -297,36 +297,38 @@ export default function ListApp() {
   }
 
   return (
-    <div className={`${styles.app}${zoomed ? ` ${styles.zoomed}` : ''}`}>
+    <div className={[styles.app, zoomed ? styles.zoomed : ''].filter(Boolean).join(' ')}>
       <AppHeader
         title="list"
         meta={
           <div className={styles.headerMeta}>
             <span>{metaText}</span>
-            {items.length > 0 && (
-              <div className={styles.exportRow}>
-                <button className={styles.iconBtn} onClick={exportTxt} title="Download .txt" aria-label="Download as text file">
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7.5 2v8M4.5 7l3 3 3-3" />
-                    <path d="M2 12h11" />
-                  </svg>
-                </button>
-                <button className={styles.iconBtn} onClick={copyList} title="Copy to clipboard" aria-label="Copy list">
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="4" width="8" height="9" rx="1" />
-                    <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
-                  </svg>
-                </button>
-                <StatusMessage message="copied!" visible={copied} />
-              </div>
-            )}
-            <button
-              className={`${styles.zoomBtn}${zoomed ? ` ${styles.zoomActive}` : ''}`}
-              onClick={() => setZoomed(z => !z)}
-              aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
-            >
-              {zoomed ? 'A−' : 'A+'}
-            </button>
+            <div className={styles.metaActions}>
+              <button
+                className={`${styles.zoomBtn}${zoomed ? ` ${styles.zoomActive}` : ''}`}
+                onClick={() => setZoomed(z => !z)}
+                aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+              >
+                {zoomed ? 'A−' : 'A+'}
+              </button>
+              {items.length > 0 && (
+                <>
+                  <button className={styles.iconBtn} onClick={exportTxt} title="Download .txt" aria-label="Download as text file">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7.5 2v8M4.5 7l3 3 3-3" />
+                      <path d="M2 12h11" />
+                    </svg>
+                  </button>
+                  <button className={styles.iconBtn} onClick={copyList} title="Copy to clipboard" aria-label="Copy list">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="4" width="8" height="9" rx="1" />
+                      <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
+                    </svg>
+                  </button>
+                  <StatusMessage message="copied!" visible={copied} />
+                </>
+              )}
+            </div>
           </div>
         }
         about={<>

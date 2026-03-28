@@ -142,10 +142,6 @@
     box-sizing: border-box;
   }
 
-  .header {
-    display: none;
-  }
-
   .controls {
     margin-bottom: 0.75rem;
     flex-shrink: 0;
