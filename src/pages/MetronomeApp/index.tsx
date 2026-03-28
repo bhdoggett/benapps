@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
+import DragNumber from '../../components/DragNumber'
 import styles from './MetronomeApp.module.css'
 
 const LOOKAHEAD_MS = 25
@@ -7,7 +8,6 @@ const SCHEDULE_AHEAD_S = 0.1
 
 export default function MetronomeApp() {
   const [bpm, setBpm] = useState(120)
-  const [bpmInput, setBpmInput] = useState('120')
   const [beats, setBeats] = useState(4)
   const [running, setRunning] = useState(false)
   // per-beat flash counters — incrementing forces key change → animation restart
@@ -108,11 +108,7 @@ export default function MetronomeApp() {
   }
 
   function adjustBpm(delta: number) {
-    setBpm(prev => {
-      const next = Math.max(40, Math.min(240, prev + delta))
-      setBpmInput(String(next))
-      return next
-    })
+    setBpm(prev => Math.max(40, Math.min(240, prev + delta)))
   }
 
   function handleTap() {
@@ -126,7 +122,6 @@ export default function MetronomeApp() {
       const avg = intervals.reduce((a, b) => a + b) / intervals.length
       const newBpm = Math.max(40, Math.min(240, Math.round(60000 / avg)))
       setBpm(newBpm)
-      setBpmInput(String(newBpm))
     }
   }
 
@@ -170,23 +165,12 @@ export default function MetronomeApp() {
       <div className={styles.bpmRow}>
         <button className={styles.adjBtn} onClick={() => adjustBpm(-1)} aria-label="decrease BPM">−</button>
         <div className={styles.bpmStack}>
-          <input
+          <DragNumber
+            value={bpm}
+            min={40}
+            max={240}
+            onChange={setBpm}
             className={styles.bpmInput}
-            type="text"
-            inputMode="numeric"
-            value={bpmInput}
-            onChange={e => {
-              const val = e.target.value
-              setBpmInput(val)
-              const n = parseInt(val, 10)
-              if (!isNaN(n) && n >= 40 && n <= 240) setBpm(n)
-            }}
-            onKeyDown={e => {
-              if (e.key === 'ArrowUp') { e.preventDefault(); adjustBpm(1) }
-              if (e.key === 'ArrowDown') { e.preventDefault(); adjustBpm(-1) }
-            }}
-            onBlur={() => setBpmInput(String(bpm))}
-            aria-label="BPM"
           />
           <div className={styles.bpmLabel}>bpm</div>
         </div>
@@ -213,7 +197,14 @@ export default function MetronomeApp() {
             onClick={() => setBeats(b => Math.max(1, b - 1))}
             aria-label="decrease beats"
           >−</button>
-          <span className={styles.timeSigNum}>{beats}</span>
+          <DragNumber
+            value={beats}
+            min={1}
+            max={8}
+            onChange={setBeats}
+            className={styles.timeSigNum}
+            pixelsPerUnit={8}
+          />
           <button
             className={styles.adjBtn}
             onClick={() => setBeats(b => Math.min(8, b + 1))}

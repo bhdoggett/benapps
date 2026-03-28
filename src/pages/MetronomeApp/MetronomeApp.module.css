@@ -125,10 +125,15 @@
   font-weight: 900;
   line-height: 1;
   color: var(--fg);
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
   transform: translateY(-0.18em);
   width: 2ch;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  caret-color: var(--fg);
 }
 
 .timeSigLabel {
@@ -142,7 +147,17 @@
 .controlRow {
   display: flex;
   gap: 0.6rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (orientation: landscape) and (pointer: coarse) {
+  .controlRow {
+    margin-bottom: 0.5rem;
+  }
+
+  .bpmLabel {
+    margin-top: -0.6em;
+  }
 }
 
 .controlBtn {
