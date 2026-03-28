@@ -352,3 +352,18 @@
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
+
+@media (orientation: landscape) and (pointer: coarse) {
+  .app {
+    max-width: 100%;
+    padding: 1.25rem 2.5rem 2rem;
+  }
+
+  .header {
+    display: none;
+  }
+
+  .exportRow {
+    display: none;
+  }
+}

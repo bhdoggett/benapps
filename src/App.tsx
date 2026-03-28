@@ -66,6 +66,8 @@ function writePersistedTimer(next: PersistedTimer) {
   }
 }
 
+const FOCUS_APPS = new Set(['/timer', '/piano', '/list', '/draw'])
+
 function Layout() {
   const { pathname } = useLocation()
   const { content, isOpen, setIsOpen } = useAbout()
@@ -165,7 +167,7 @@ function Layout() {
 
   return (
     <>
-      <div className={`${styles.topBar} ${pathname === '/timer' ? styles.timerTopBar : ''} ${pathname === '/piano' ? styles.pianoTopBar : ''} ${pathname === '/list' ? styles.listTopBar : ''}`}>
+      <div className={`${styles.topBar} ${FOCUS_APPS.has(pathname) ? styles.focusTopBar : ''}`}>
         {pathname !== '/' ? <BackLink /> : <span />}
         <div className={styles.topRight}>
           <ThemeToggle />

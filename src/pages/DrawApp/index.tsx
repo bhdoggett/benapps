@@ -667,7 +667,9 @@ export default function DrawApp() {
 
   return (
     <div className={styles.app}>
-      <AppHeader title="draw" />
+      <div className={styles.header}>
+        <AppHeader title="draw" />
+      </div>
 
       <div className={styles.toolbar}>
         <div className={styles.toolbarRow}>
