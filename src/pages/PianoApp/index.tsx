@@ -81,7 +81,7 @@ export default function PianoApp() {
   const dragStartXRef = useRef(0)
   const dragStartScrollRef = useRef(0)
   const isDraggingRef = useRef(false)
-  const tapNoteRef = useRef<number | null>(null)
+  const unlockPointerNotesRef = useRef(new Map<number, number>()) // pointerId → midi (unlock mode)
 
   // DOM refs — direct manipulation avoids React re-renders during play/scroll
   const pianoWrapperRef = useRef<HTMLDivElement>(null)
@@ -310,14 +310,16 @@ export default function PianoApp() {
           pointerNotesRef.current.set(e.pointerId, midi)
         }
       } else {
-        scrollPointerRef.current = e.pointerId
-        dragStartXRef.current = e.clientX
-        dragStartScrollRef.current = scrollXRef.current
-        isDraggingRef.current = false
+        if (scrollPointerRef.current === null) {
+          scrollPointerRef.current = e.pointerId
+          dragStartXRef.current = e.clientX
+          dragStartScrollRef.current = scrollXRef.current
+          isDraggingRef.current = false
+        }
         const midi = midiFromPointer(e.clientX, e.clientY)
         if (midi !== null) {
           noteOn(midi)
-          tapNoteRef.current = midi
+          unlockPointerNotesRef.current.set(e.pointerId, midi)
         }
       }
     }
@@ -342,9 +344,10 @@ export default function PianoApp() {
         if (!isDraggingRef.current) {
           if (Math.abs(e.clientX - dragStartXRef.current) < DRAG_THRESHOLD) return
           isDraggingRef.current = true
-          if (tapNoteRef.current !== null) {
-            noteOff(tapNoteRef.current)
-            tapNoteRef.current = null
+          const midi = unlockPointerNotesRef.current.get(e.pointerId)
+          if (midi !== undefined) {
+            noteOff(midi)
+            unlockPointerNotesRef.current.delete(e.pointerId)
           }
         }
         const maxScroll = Math.max(0, TOTAL_WHITE_KEYS * keyWidthRef.current - wrapper!.clientWidth)
@@ -360,12 +363,13 @@ export default function PianoApp() {
         if (prevMidi !== undefined) noteOff(prevMidi)
         pointerNotesRef.current.delete(e.pointerId)
       } else {
+        const midi = unlockPointerNotesRef.current.get(e.pointerId)
+        if (midi !== undefined) {
+          noteOff(midi)
+          unlockPointerNotesRef.current.delete(e.pointerId)
+        }
         if (scrollPointerRef.current === e.pointerId) {
           scrollPointerRef.current = null
-          if (tapNoteRef.current !== null) {
-            noteOff(tapNoteRef.current)
-            tapNoteRef.current = null
-          }
           isDraggingRef.current = false
         }
       }
