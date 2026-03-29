@@ -225,6 +225,7 @@
 
 @media (orientation: landscape) and (pointer: coarse) {
   .app {
+    max-width: 100%;
     padding-top: 0.5rem;
     padding-bottom: 0.75rem;
   }
@@ -234,7 +235,7 @@
   }
 
   .noteName {
-    font-size: 7rem;
+    font-size: clamp(3.5rem, 15vw, 9rem);
   }
 
   .noteDisplay {
@@ -250,7 +251,7 @@
   }
 
   .value {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 5vw, 2.5rem);
   }
 
   .row {
