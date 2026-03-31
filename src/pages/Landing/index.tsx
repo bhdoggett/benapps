@@ -49,6 +49,7 @@ export default function Landing() {
     () => localStorage.getItem(STORAGE_KEY) ?? "",
   );
   const [starred, setStarred] = useState<string[]>(loadStarred);
+  const [query, setQuery] = useState("");
   const starredRef = useRef(starred);
   starredRef.current = starred;
 
@@ -281,10 +282,14 @@ export default function Landing() {
     document.addEventListener("pointercancel", onUp);
   }
 
+  const lq = query.toLowerCase();
   const starredApps = starred
     .map((path) => apps.find((a) => a.path === path))
-    .filter((a): a is (typeof apps)[0] => a !== undefined);
-  const unstarredApps = apps.filter((a) => !starred.includes(a.path));
+    .filter((a): a is (typeof apps)[0] => a !== undefined)
+    .filter((a) => a.name.includes(lq));
+  const unstarredApps = apps
+    .filter((a) => !starred.includes(a.path))
+    .filter((a) => a.name.includes(lq));
 
   return (
     <div className={styles.body}>
@@ -306,6 +311,16 @@ export default function Landing() {
           />
           <span className={styles.appsSpan}>apps</span>
         </h1>
+        <input
+          className={styles.searchInput}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Escape") setQuery(""); }}
+          placeholder="search"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
         <ul className={styles.appList} ref={listRef}>
           {starredApps.map((app) => (
             <li key={app.path} data-path={app.path} className={styles.appRow}>

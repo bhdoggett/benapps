@@ -1,9 +1,8 @@
 .body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   min-height: 100vh;
-  padding: 3rem 2rem;
+  padding: 6vh 2rem 4rem;
 }
 
 .inner {
@@ -56,6 +55,29 @@
 
 .prefixInput::placeholder {
   color: var(--muted);
+}
+
+.searchInput {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--dim);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 0;
+  width: 100%;
+  outline: none;
+  margin-bottom: 0.75rem;
+  transition: border-color 0.15s;
+}
+
+.searchInput::placeholder {
+  color: var(--dim);
+}
+
+.searchInput:focus {
+  border-color: var(--muted);
 }
 
 .appList {
