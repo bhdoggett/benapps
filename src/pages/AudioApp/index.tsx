@@ -177,7 +177,7 @@ export default function AudioApp() {
     const h = canvas.clientHeight
     if (!w || !h) return
 
-    if (peaksBufRef.current !== buf) {
+    if (peaksBufRef.current !== buf || peaksRef.current?.length !== w) {
       const numCh = buf.numberOfChannels
       const channels = Array.from({ length: numCh }, (_, c) => buf.getChannelData(c))
       const peaks = new Float32Array(w)
@@ -208,7 +208,7 @@ export default function AudioApp() {
       ctx.fillStyle = b >= trimStartX && b <= trimEndX ? mutedColor : dimColor
       ctx.fillRect(b, mid - barH / 2, 1, barH)
     }
-  }, [state.workingBuffer, state.trimStart, state.trimEnd])
+  }, [state.workingBuffer, state.trimStart, state.trimEnd, isLandscapeMobile])
 
   const hasFile = state.currentFile !== null && state.audioBuffer !== null
   const hasTrimChange = state.workingBuffer !== null && (state.trimStart > 0 || state.trimEnd < state.workingBuffer.duration - 0.01)
@@ -409,6 +409,15 @@ export default function AudioApp() {
   }
 
   useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.playbackState = 'none'
+      ;(['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'previoustrack', 'nexttrack'] as MediaSessionAction[])
+        .forEach(action => { try { navigator.mediaSession.setActionHandler(action, null) } catch {} })
+    }
+  }, [])
+
+  useEffect(() => {
     if (!hasFile) return
     function onKeyDown(e: KeyboardEvent) {
       if (e.code === 'Space' && !(e.target instanceof HTMLInputElement)) {
@@ -456,7 +465,7 @@ export default function AudioApp() {
             <button className={styles.closeBtn} onClick={resetAll}>×</button>
           </div>
 
-          <audio ref={playerRef} className={styles.player} src={state.playerSrc} />
+          <audio ref={playerRef} className={styles.player} src={state.playerSrc} disableRemotePlayback />
 
           {state.workingBuffer && (() => {
             const duration = state.workingBuffer.duration
@@ -464,7 +473,10 @@ export default function AudioApp() {
               <>
                 <div className={styles.playerRow}>
                   <button className={styles.playBtn} onClick={togglePlay} disabled={state.buttonsDisabled}>
-                    {state.playing ? '⏸' : '▶'}
+                    {state.playing
+                      ? <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><rect x="0" y="0" width="3.5" height="12" rx="0.5"/><rect x="6.5" y="0" width="3.5" height="12" rx="0.5"/></svg>
+                      : <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><polygon points="0,0 10,6 0,12"/></svg>
+                    }
                   </button>
                   <div className={styles.trimTrack}>
                     <canvas ref={canvasRef} className={styles.waveformCanvas} />
