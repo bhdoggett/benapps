@@ -34,7 +34,9 @@ function loadStarred(): string[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 function saveStarred(paths: string[]) {
@@ -112,11 +114,21 @@ export default function Landing() {
         <p>
           Requests or feedback?{" "}
           <a
-            href="https://github.com/bhdoggett/benapps/issues"
+            href="https://github.com/bhdoggett/underscoreapps/issues"
             target="_blank"
             rel="noreferrer"
           >
             Open an issue on GitHub.
+          </a>{" "}
+        </p>
+        <p>
+          Want to contribute?{" "}
+          <a
+            href="https://github.com/bhdoggett/underscoreapps/blob/main/CONTRIBUTING.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Read the guide.
           </a>
         </p>
       </>,
@@ -131,7 +143,9 @@ export default function Landing() {
     const sizer = sizerRef.current;
     const input = inputRef.current;
     if (!sizer || !input) return;
-    const sync = () => { input.style.width = sizer.offsetWidth + 4 + "px"; };
+    const sync = () => {
+      input.style.width = sizer.offsetWidth + 4 + "px";
+    };
     sync();
     const ro = new ResizeObserver(sync);
     ro.observe(sizer);
@@ -149,9 +163,9 @@ export default function Landing() {
   }
 
   function toggleStar(path: string) {
-    setStarred(prev => {
+    setStarred((prev) => {
       const next = prev.includes(path)
-        ? prev.filter(p => p !== path)
+        ? prev.filter((p) => p !== path)
         : [...prev, path];
       saveStarred(next);
       return next;
@@ -159,21 +173,37 @@ export default function Landing() {
   }
 
   function clearDragClasses() {
-    listRef.current?.querySelectorAll("li[data-path]").forEach(el => {
-      el.classList.remove(styles.dragging, styles.insertAbove, styles.insertBelow);
+    listRef.current?.querySelectorAll("li[data-path]").forEach((el) => {
+      el.classList.remove(
+        styles.dragging,
+        styles.insertAbove,
+        styles.insertBelow,
+      );
     });
   }
 
   function getLiForPath(path: string): HTMLLIElement | null {
-    return listRef.current?.querySelector<HTMLLIElement>(`li[data-path="${path}"]`) ?? null;
+    return (
+      listRef.current?.querySelector<HTMLLIElement>(
+        `li[data-path="${path}"]`,
+      ) ?? null
+    );
   }
 
-  function handleDragPointerDown(e: React.PointerEvent<HTMLSpanElement>, path: string) {
+  function handleDragPointerDown(
+    e: React.PointerEvent<HTMLSpanElement>,
+    path: string,
+  ) {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
 
-    dragRef.current = { srcPath: path, startY: e.clientY, hasMoved: false, lastOverLi: null };
+    dragRef.current = {
+      srcPath: path,
+      startY: e.clientY,
+      hasMoved: false,
+      lastOverLi: null,
+    };
 
     const srcLi = getLiForPath(path);
 
@@ -203,7 +233,10 @@ export default function Landing() {
       }
 
       if (drag.lastOverLi && drag.lastOverLi !== overLi) {
-        drag.lastOverLi.classList.remove(styles.insertAbove, styles.insertBelow);
+        drag.lastOverLi.classList.remove(
+          styles.insertAbove,
+          styles.insertBelow,
+        );
       }
       if (overLi) {
         overLi.classList.toggle(styles.insertAbove, insertAbove);
@@ -229,7 +262,7 @@ export default function Landing() {
       const rect = overLiEl.getBoundingClientRect();
       const before = ev.clientY < rect.top + rect.height / 2;
 
-      setStarred(prev => {
+      setStarred((prev) => {
         const next = [...prev];
         const srcIdx = next.indexOf(drag.srcPath);
         if (srcIdx === -1) return prev;
@@ -249,9 +282,9 @@ export default function Landing() {
   }
 
   const starredApps = starred
-    .map(path => apps.find(a => a.path === path))
-    .filter((a): a is typeof apps[0] => a !== undefined);
-  const unstarredApps = apps.filter(a => !starred.includes(a.path));
+    .map((path) => apps.find((a) => a.path === path))
+    .filter((a): a is (typeof apps)[0] => a !== undefined);
+  const unstarredApps = apps.filter((a) => !starred.includes(a.path));
 
   return (
     <div className={styles.body}>
@@ -278,13 +311,17 @@ export default function Landing() {
             <li key={app.path} data-path={app.path} className={styles.appRow}>
               <span
                 className={styles.dragHandle}
-                onPointerDown={e => handleDragPointerDown(e, app.path)}
+                onPointerDown={(e) => handleDragPointerDown(e, app.path)}
                 aria-hidden
-              >⠿</span>
+              >
+                ⠿
+              </span>
               <Link
                 className={styles.appLink}
                 to={app.path}
-                onClick={e => { if (dragRef.current?.hasMoved) e.preventDefault(); }}
+                onClick={(e) => {
+                  if (dragRef.current?.hasMoved) e.preventDefault();
+                }}
               >
                 <span className={styles.appName}>{app.name}</span>
                 <span className={styles.arrow}>→</span>
@@ -293,7 +330,9 @@ export default function Landing() {
                 className={[styles.starBtn, styles.isStarred].join(" ")}
                 onClick={() => toggleStar(app.path)}
                 aria-label={`Unstar ${app.name}`}
-              >★</button>
+              >
+                ★
+              </button>
             </li>
           ))}
 
@@ -307,7 +346,9 @@ export default function Landing() {
                 className={styles.starBtn}
                 onClick={() => toggleStar(app.path)}
                 aria-label={`Star ${app.name}`}
-              >☆</button>
+              >
+                ☆
+              </button>
             </li>
           ))}
         </ul>
