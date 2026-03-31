@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import AppHeader from "../../components/AppHeader";
+import { useIsLandscapeMobile } from "../../hooks/useIsLandscapeMobile";
 import styles from "./TunerApp.module.css";
 
 const NOTE_NAMES = [
@@ -18,19 +19,6 @@ const NOTE_NAMES = [
 ];
 const EMA_ALPHA = 0.35;
 const STABLE_FRAMES = 3;
-
-function useIsLandscapeMobile() {
-  const [is, setIs] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-    const media = window.matchMedia('(orientation: landscape) and (pointer: coarse)')
-    const update = () => setIs(media.matches)
-    update()
-    media.addEventListener?.('change', update)
-    return () => media.removeEventListener?.('change', update)
-  }, [])
-  return is
-}
 
 function parabolicPeak(bins: Float32Array, k: number): number {
   if (k <= 0 || k >= bins.length - 1) return k;

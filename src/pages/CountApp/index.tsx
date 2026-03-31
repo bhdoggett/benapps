@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
+import { useIsLandscapeMobile } from '../../hooks/useIsLandscapeMobile'
 import styles from './CountApp.module.css'
 
 const STORAGE_KEY = '_apps.count.v1'
@@ -19,6 +20,7 @@ function readInitialCount(): number {
 }
 
 export default function CountApp() {
+  const isLandscapeMobile = useIsLandscapeMobile()
   const [count, setCount] = useState(readInitialCount)
 
   useEffect(() => {
@@ -40,6 +42,23 @@ export default function CountApp() {
     }
   }
 
+  const inner = (
+    <div className={styles.content}>
+      <div className={styles.countRow}>
+        <button className={styles.adjBtn} onClick={() => setCount(c => Math.max(0, c - 1))}>−</button>
+        <div className={styles.display}>{count}</div>
+        <button className={styles.adjBtn} onClick={() => setCount(c => c + 1)}>+</button>
+      </div>
+      <div className={styles.btnRowClear}>
+        <button className={[styles.btn, styles.btnClear].join(' ')} onClick={clear}>clear</button>
+      </div>
+    </div>
+  )
+
+  if (isLandscapeMobile) {
+    return <div className={styles.focusOverlay}>{inner}</div>
+  }
+
   return (
     <div className={styles.app}>
       <AppHeader
@@ -53,14 +72,7 @@ export default function CountApp() {
           </ul>
         </>}
       />
-      <div className={styles.countRow}>
-        <button className={styles.adjBtn} onClick={() => setCount(c => Math.max(0, c - 1))}>−</button>
-        <div className={styles.display}>{count}</div>
-        <button className={styles.adjBtn} onClick={() => setCount(c => c + 1)}>+</button>
-      </div>
-      <div className={styles.btnRowClear}>
-        <button className={[styles.btn, styles.btnClear].join(' ')} onClick={clear}>clear</button>
-      </div>
+      {inner}
     </div>
   )
 }

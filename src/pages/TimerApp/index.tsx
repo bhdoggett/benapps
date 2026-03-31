@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
+import { useIsLandscapeMobile } from '../../hooks/useIsLandscapeMobile'
 import styles from './TimerApp.module.css'
 
 type TimerMode = 'idle' | 'running' | 'paused' | 'done'
@@ -68,7 +69,7 @@ export default function TimerApp() {
   const [timer, setTimer] = useState<TimerState>(idle)
   const [laps, setLaps] = useState<number[]>([])
   const [, setTick] = useState(0)
-  const [isLandscapeMobile, setIsLandscapeMobile] = useState(false)
+  const isLandscapeMobile = useIsLandscapeMobile()
   const notifiedRef = useRef(false)
   const doneNotifiedAtRef = useRef<number | null>(null)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
@@ -134,19 +135,6 @@ export default function TimerApp() {
       doneNotifiedAtRef.current = null
     }
   }, [timer.mode])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-
-    const media = window.matchMedia('(orientation: landscape) and (pointer: coarse)')
-    const update = () => setIsLandscapeMobile(media.matches)
-    update()
-
-    media.addEventListener?.('change', update)
-    return () => {
-      media.removeEventListener?.('change', update)
-    }
-  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

@@ -1,20 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
 import DragNumber from '../../components/DragNumber'
+import { useIsLandscapeMobile } from '../../hooks/useIsLandscapeMobile'
 import styles from './MetronomeApp.module.css'
-
-function useIsLandscapeMobile() {
-  const [is, setIs] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-    const media = window.matchMedia('(orientation: landscape) and (pointer: coarse)')
-    const update = () => setIs(media.matches)
-    update()
-    media.addEventListener?.('change', update)
-    return () => media.removeEventListener?.('change', update)
-  }, [])
-  return is
-}
 
 const LOOKAHEAD_MS = 25
 const SCHEDULE_AHEAD_S = 0.1
