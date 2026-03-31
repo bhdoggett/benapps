@@ -1,6 +1,8 @@
-# Contributing to _apps
+# Contributing to \_apps
 
 A personal collection of single-purpose mini-apps. Each app is self-contained, minimal, and works well in dark and light mode.
+
+If you're using Claude Code, run `/project:contributing` to load these guidelines directly into context.
 
 ## Tech stack
 
@@ -33,21 +35,21 @@ npm run build    # tsc + vite build
 
 Defined in `src/styles/global.css`. Always use these — never hardcode colors.
 
-| Variable | Dark | Light | Role |
-|----------|------|-------|------|
-| `--bg` | `#0a0a0a` | `#f5f5f5` | Page background |
-| `--fg` | `#efefef` | `#0a0a0a` | Primary text, active elements |
-| `--muted` | `#999999` | `#7d7d7d` | Secondary text, idle labels |
-| `--dim` | `#616161` | `#aeaeae` | Tertiary text, idle borders |
-| `--rule` | `#2a2a2a` | `#d0d0d0` | Dividers, rules |
+| Variable  | Dark      | Light     | Role                          |
+| --------- | --------- | --------- | ----------------------------- |
+| `--bg`    | `#0a0a0a` | `#f5f5f5` | Page background               |
+| `--fg`    | `#efefef` | `#0a0a0a` | Primary text, active elements |
+| `--muted` | `#999999` | `#7d7d7d` | Secondary text, idle labels   |
+| `--dim`   | `#616161` | `#aeaeae` | Tertiary text, idle borders   |
+| `--rule`  | `#2a2a2a` | `#d0d0d0` | Dividers, rules               |
 
 Light mode is applied by setting `data-theme="light"` on `<html>`.
 
 ### Fonts
 
 ```css
---font-display: 'Playfair Display', Georgia, serif;  /* weight 900 only */
---font-mono:    'Courier Prime', 'Courier New', monospace;
+--font-display: "Playfair Display", Georgia, serif; /* weight 900 only */
+--font-mono: "Courier Prime", "Courier New", monospace;
 ```
 
 - `--font-display` — large numbers, time displays, prominent headings
@@ -62,7 +64,7 @@ font-family: var(--font-mono);
 font-size: 0.6rem;
 letter-spacing: 0.15em;
 text-transform: uppercase;
-color: var(--muted);  /* or var(--dim) for quieter labels */
+color: var(--muted); /* or var(--dim) for quieter labels */
 ```
 
 ### Buttons
@@ -114,11 +116,11 @@ src/components/MyComponent/
 
 Choose the right tool:
 
-| Situation | Use |
-|-----------|-----|
-| 1–3 independent values | `useState` |
-| 4+ related values or 4+ action types | `useReducer` |
-| Changes during events, must not re-render | `useRef` |
+| Situation                                 | Use          |
+| ----------------------------------------- | ------------ |
+| 1–3 independent values                    | `useState`   |
+| 4+ related values or 4+ action types      | `useReducer` |
+| Changes during events, must not re-render | `useRef`     |
 
 **`useReducer` pattern** — define above the component, in this order:
 
@@ -149,12 +151,12 @@ export default function MyApp() {
 Click a displayed value → copy to clipboard → show "copied" in place of the value for ~1.2 seconds, then restore.
 
 ```ts
-const [copied, setCopied] = useState(false)
+const [copied, setCopied] = useState(false);
 
 function handleCopy() {
-  navigator.clipboard.writeText(value)
-  setCopied(true)
-  setTimeout(() => setCopied(false), 1200)
+  navigator.clipboard.writeText(value);
+  setCopied(true);
+  setTimeout(() => setCopied(false), 1200);
 }
 ```
 
@@ -168,7 +170,7 @@ Use the `DragNumber` component instead of a plain `<input type="number">` when y
   min={1}
   max={99}
   onChange={setCount}
-  pixelsPerUnit={2}   // pixels of drag per unit change (default 1.5)
+  pixelsPerUnit={2} // pixels of drag per unit change (default 1.5)
 />
 ```
 
@@ -181,7 +183,7 @@ To orient a range slider with bottom = min and top = max:
 ```css
 writing-mode: vertical-lr;
 direction: rtl;
-touch-action: none;  /* required */
+touch-action: none; /* required */
 ```
 
 ### Touch support
@@ -192,26 +194,36 @@ touch-action: none;  /* required */
 
 ### Landscape / focus mode on mobile
 
-When a touch device rotates to landscape, hide secondary chrome and expand the primary content to fill the screen. Use the media query `(orientation: landscape) and (pointer: coarse)` to target touch devices only — desktop browsers in a narrow window won't be affected.
+When a touch device rotates to landscape, the app header and layout top bar hide automatically (handled globally). Apps only need to handle their own content.
 
-At minimum, remove the `max-width` constraint and tighten padding. Beyond that, think about what the user is actually doing in landscape: hide forms, settings, or input areas they don't need while focused on the core task. The goal is a distraction-free view where the content earns every pixel of the wider screen.
+Use `(orientation: landscape) and (pointer: coarse)` — this targets touch devices only, so desktop browsers in a narrow window are unaffected.
+
+Two techniques, often combined:
+
+**1. Scale primary content with `vw` + `clamp()`** — lets the key number or display fill the wider screen naturally:
 
 ```css
-/* ---- Focus mode (landscape on touch devices) ---- */
+.display {
+  font-size: clamp(5rem, 22vw, 14rem);
+}
+```
+
+**2. Hide secondary UI** — remove inputs, forms, or settings the user doesn't need while focused on the core task:
+
+```css
 @media (orientation: landscape) and (pointer: coarse) {
   .app {
     max-width: 100%;
-    padding: 1.5rem;
+    padding: 0.5rem 1.5rem 1rem;
   }
 
-  /* hide anything that isn't the primary content */
   .inputForm {
     display: none;
   }
 }
 ```
 
-Not every app needs this — only add it where landscape genuinely improves the experience (e.g., a list you're reading, a score you're watching, a timer counting down).
+Not every app needs this — only add it where landscape genuinely improves the experience (e.g., a counter you're tapping, a score you're watching, a timer counting down).
 
 ---
 
@@ -232,12 +244,14 @@ input[type="number"]::-webkit-outer-spin-button {
 ## Adding a new app
 
 1. **Create the page files**
+
    ```
    src/pages/NewApp/index.tsx
    src/pages/NewApp/NewApp.module.css
    ```
 
 2. **Add the route** in `src/App.tsx` (inside the `children` array of the Layout route):
+
    ```tsx
    import NewApp from './pages/NewApp'
    // ...
@@ -245,16 +259,19 @@ input[type="number"]::-webkit-outer-spin-button {
    ```
 
 3. **Add to the landing page** in `src/pages/Landing/index.tsx`:
+
    ```ts
    { path: '/newapp', name: 'newapp' }  // lowercase name
    ```
 
 4. **Use `AppHeader`** at the top of your app:
+
    ```tsx
-   <AppHeader title="newapp" />  // lowercase, matches the landing name
+   <AppHeader title="newapp" /> // lowercase, matches the landing name
    ```
 
 5. **Follow the `.app` container pattern**:
+
    ```css
    .app {
      max-width: 620px;
