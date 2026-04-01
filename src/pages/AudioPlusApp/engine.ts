@@ -16,8 +16,10 @@ export class AudioPlusEngine {
   private ctx: AudioContext | null = null
   private sources: Map<string, AudioBufferSourceNode> = new Map()
   private clickTimer: ReturnType<typeof setTimeout> | null = null
+  private countInTimer: ReturnType<typeof setTimeout> | null = null
   private nextClickTime = 0
   private currentBeat = 0
+  private beatsPerMeasure = 4
   private mediaRecorder: MediaRecorder | null = null
   private mediaStream: MediaStream | null = null
   private recordingChunks: Blob[] = []
@@ -28,7 +30,7 @@ export class AudioPlusEngine {
     return this.ctx
   }
 
-  /** Estimated round-trip output latency in ms from browser APIs (silent). */
+  /** Estimated output latency in ms from browser APIs. */
   getLatencyMs(): number {
     const ctx = this.getCtx()
     return (ctx.outputLatency + ctx.baseLatency) * 1000
@@ -41,12 +43,15 @@ export class AudioPlusEngine {
   play(
     tracks: EngineTrack[],
     bpm: number,
+    beatsPerMeasure: number,
     metronomeOn: boolean,
     onTick: (elapsedSeconds: number) => void
   ): number {
     const ctx = this.getCtx()
     if (ctx.state === 'suspended') ctx.resume()
     this.stop()
+
+    this.beatsPerMeasure = beatsPerMeasure
 
     const masterGain = ctx.createGain()
     masterGain.connect(ctx.destination)
@@ -96,10 +101,29 @@ export class AudioPlusEngine {
     return startAt
   }
 
+  /** Start or stop the metronome click without affecting playback. */
+  setMetronome(on: boolean, bpm: number, beatsPerMeasure: number) {
+    this.beatsPerMeasure = beatsPerMeasure
+    if (on) {
+      if (this.clickTimer === null) {
+        const ctx = this.getCtx()
+        this.currentBeat = 0
+        this.nextClickTime = ctx.currentTime + 0.05
+        this.scheduleClicks(bpm)
+      }
+    } else {
+      if (this.clickTimer !== null) {
+        clearTimeout(this.clickTimer)
+        this.clickTimer = null
+      }
+    }
+  }
+
   stop() {
     this.sources.forEach(s => { try { s.stop() } catch { /* already stopped */ } })
     this.sources.clear()
     if (this.clickTimer !== null) { clearTimeout(this.clickTimer); this.clickTimer = null }
+    if (this.countInTimer !== null) { clearTimeout(this.countInTimer); this.countInTimer = null }
     if (this.rafId !== null) { cancelAnimationFrame(this.rafId); this.rafId = null }
   }
 
@@ -113,7 +137,7 @@ export class AudioPlusEngine {
     if (!this.ctx) return
     const ctx = this.getCtx()
     while (this.nextClickTime < ctx.currentTime + SCHEDULE_AHEAD_S) {
-      this.playClick(this.nextClickTime, this.currentBeat % 4 === 0)
+      this.playClick(this.nextClickTime, this.currentBeat % this.beatsPerMeasure === 0)
       this.nextClickTime += 60 / bpm
       this.currentBeat++
     }
@@ -139,32 +163,106 @@ export class AudioPlusEngine {
   }
 
   /**
-   * Start recording from mic while playing tracks.
-   * Use headphones to avoid feedback.
+   * Start recording with a one-measure count-in click before backing tracks begin.
+   * Metronome click plays through the count-in always; continues after if metronomeOn.
+   * Returns estimated round-trip latency (output + input) in ms.
    */
   async startRecording(
     tracks: EngineTrack[],
     bpm: number,
+    beatsPerMeasure: number,
     metronomeOn: boolean,
     onTick: (elapsedSeconds: number) => void
-  ): Promise<{ stream: MediaStream; startAt: number }> {
-    // Disable echo cancellation and noise suppression so the browser doesn't
-    // process out the metronome or backing tracks from the mic capture.
+  ): Promise<{ latencyMs: number }> {
+    // Disable echo cancellation so the browser doesn't process out backing tracks.
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     })
     this.mediaStream = stream
-    const startAt = this.play(tracks, bpm, metronomeOn, onTick)
+    this.beatsPerMeasure = beatsPerMeasure
 
+    const ctx = this.getCtx()
+    if (ctx.state === 'suspended') ctx.resume()
+
+    // Combine output latency with input latency reported by the mic track.
+    const trackSettings = stream.getAudioTracks()[0]?.getSettings() as MediaTrackSettings & { latency?: number }
+    const inputLatencyMs = (trackSettings?.latency ?? 0) * 1000
+    const latencyMs = (ctx.outputLatency + ctx.baseLatency) * 1000 + inputLatencyMs
+
+    const countInDuration = beatsPerMeasure * (60 / bpm)
+    const countInStartAt = ctx.currentTime + 0.05
+    const tracksStartAt = countInStartAt + countInDuration
+
+    // Count-in click (always plays for one measure regardless of metronomeOn)
+    this.currentBeat = 0
+    this.nextClickTime = countInStartAt
+    this.scheduleClicks(bpm)
+
+    // If metronome is off, stop click after count-in completes
+    if (!metronomeOn) {
+      this.countInTimer = setTimeout(() => {
+        this.countInTimer = null
+        if (this.clickTimer !== null) { clearTimeout(this.clickTimer); this.clickTimer = null }
+      }, countInDuration * 1000)
+    }
+
+    // Schedule backing tracks to start after count-in
+    const masterGain = ctx.createGain()
+    masterGain.connect(ctx.destination)
+
+    for (const track of tracks) {
+      if (track.muted) continue
+      const duration = track.buffer.duration - track.trimStart - track.trimEnd
+      if (duration <= 0) continue
+
+      const source = ctx.createBufferSource()
+      source.buffer = track.buffer
+
+      const gain = ctx.createGain()
+      gain.gain.value = track.volume
+
+      const panner = ctx.createStereoPanner()
+      panner.pan.value = track.pan
+
+      source.connect(gain)
+      gain.connect(panner)
+      panner.connect(masterGain)
+
+      const when = tracksStartAt + Math.max(0, track.startOffset)
+      const bufferOffset = track.trimStart + Math.max(0, -track.startOffset)
+      const playDuration = duration - Math.max(0, -track.startOffset)
+      if (playDuration <= 0) continue
+
+      source.start(when, bufferOffset, playDuration)
+      this.sources.set(track.id, source)
+    }
+
+    // RAF: negative elapsed during count-in, 0+ once backing tracks begin
+    const tick = () => {
+      onTick(ctx.currentTime - tracksStartAt)
+      this.rafId = requestAnimationFrame(tick)
+    }
+    this.rafId = requestAnimationFrame(tick)
+
+    // Route mic through the Web Audio graph to avoid OS-level echo cancellation
+    // suppressing backing tracks from the mic signal.
+    const micSource = ctx.createMediaStreamSource(stream)
+    const micDest = ctx.createMediaStreamDestination()
+    micSource.connect(micDest)
+
+    // Start MediaRecorder after count-in
     this.recordingChunks = []
     const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
-    this.mediaRecorder = new MediaRecorder(stream, { mimeType })
+    this.mediaRecorder = new MediaRecorder(micDest.stream, { mimeType })
     this.mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) this.recordingChunks.push(e.data)
     }
-    this.mediaRecorder.start()
+    this.countInTimer = setTimeout(() => {
+      this.countInTimer = null
+      this.mediaRecorder?.start()
+    }, countInDuration * 1000)
 
-    return { stream, startAt }
+    return { latencyMs }
   }
 
   /**

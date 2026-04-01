@@ -68,7 +68,7 @@
   color: var(--dim);
 }
 
-.bpmInput {
+.dragNum {
   background: none;
   border: none;
   outline: none;
@@ -77,13 +77,6 @@
   color: var(--fg);
   width: 3rem;
   text-align: right;
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-.bpmInput::-webkit-inner-spin-button,
-.bpmInput::-webkit-outer-spin-button {
-  -webkit-appearance: none;
 }
 
 .topBtn {

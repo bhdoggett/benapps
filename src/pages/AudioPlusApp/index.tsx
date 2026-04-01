@@ -1,6 +1,7 @@
 import { useReducer, useRef, useEffect } from 'react'
 import AppHeader from '../../components/AppHeader'
 import RangeSlider from '../../components/RangeSlider'
+import DragNumber from '../../components/DragNumber'
 import { useIsLandscapeMobile } from '../../hooks/useIsLandscapeMobile'
 import { AudioPlusEngine } from './engine'
 import type { EngineTrack } from './engine'
@@ -304,7 +305,7 @@ export default function AudioPlusApp() {
       } else {
         engineRef.current.play(
           state.tracks.filter(t => buffersRef.current.has(t.id)).map(t => ({ ...t, buffer: buffersRef.current.get(t.id)! })),
-          state.bpm, state.metronomeOn,
+          state.bpm, state.beatsPerMeasure, state.metronomeOn,
           (elapsed) => dispatch({ type: 'SET_PLAYHEAD', time: elapsed })
         )
         dispatch({ type: 'SET_PLAYING', isPlaying: true })
@@ -325,7 +326,7 @@ export default function AudioPlusApp() {
 
   function handlePlay() {
     if (state.isPlaying) return
-    engineRef.current.play(getEngineTracks(), state.bpm, state.metronomeOn, (elapsed) => {
+    engineRef.current.play(getEngineTracks(), state.bpm, state.beatsPerMeasure, state.metronomeOn, (elapsed) => {
       dispatch({ type: 'SET_PLAYHEAD', time: elapsed })
     })
     dispatch({ type: 'SET_PLAYING', isPlaying: true })
@@ -369,14 +370,24 @@ export default function AudioPlusApp() {
 
   async function handleRecord() {
     dispatch({ type: 'SET_PHASE', phase: 'recording' })
+    dispatch({ type: 'SET_PLAYING', isPlaying: true })
     try {
-      await engineRef.current.startRecording(
-        getEngineTracks(), state.bpm, state.metronomeOn,
+      const { latencyMs } = await engineRef.current.startRecording(
+        getEngineTracks(), state.bpm, state.beatsPerMeasure, state.metronomeOn,
         (elapsed) => dispatch({ type: 'SET_PLAYHEAD', time: elapsed })
       )
-      dispatch({ type: 'SET_PLAYING', isPlaying: true })
+      dispatch({ type: 'SET_LATENCY', ms: latencyMs })
     } catch (_e) {
       dispatch({ type: 'SET_PHASE', phase: 'idle' })
+      dispatch({ type: 'SET_PLAYING', isPlaying: false })
+    }
+  }
+
+  function handleToggleMetronome() {
+    const next = !state.metronomeOn
+    dispatch({ type: 'TOGGLE_METRONOME' })
+    if (state.isPlaying || state.phase === 'recording') {
+      engineRef.current.setMetronome(next, state.bpm, state.beatsPerMeasure)
     }
   }
 
@@ -470,25 +481,19 @@ export default function AudioPlusApp() {
           onChange={e => dispatch({ type: 'SET_PROJECT_NAME', name: e.target.value })}
         />
         <div className={styles.bpmGroup}>
+          <DragNumber value={state.bpm} min={20} max={300}
+            className={styles.dragNum}
+            onChange={v => dispatch({ type: 'SET_BPM', bpm: v })} />
           <span className={styles.topLabel}>bpm</span>
-          <input
-            type="number"
-            className={styles.bpmInput}
-            value={state.bpm}
-            min={20} max={300}
-            onChange={e => dispatch({ type: 'SET_BPM', bpm: Number(e.target.value) })}
-          />
-          <span className={styles.topLabel}>/</span>
-          <input
-            type="number"
-            className={styles.bpmInput}
-            value={state.beatsPerMeasure}
-            min={1} max={16}
-            onChange={e => dispatch({ type: 'SET_BEATS_PER_MEASURE', beats: Number(e.target.value) })}
-          />
+        </div>
+        <div className={styles.bpmGroup}>
+          <DragNumber value={state.beatsPerMeasure} min={1} max={16}
+            className={styles.dragNum}
+            onChange={v => dispatch({ type: 'SET_BEATS_PER_MEASURE', beats: v })} />
+          <span className={styles.topLabel}>beats</span>
           <button
             className={[styles.topBtn, state.metronomeOn ? styles.topBtnOn : ''].join(' ')}
-            onClick={() => dispatch({ type: 'TOGGLE_METRONOME' })}
+            onClick={handleToggleMetronome}
           >click</button>
         </div>
         <div className={styles.zoomGroup}>
