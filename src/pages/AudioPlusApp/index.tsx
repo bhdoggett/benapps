@@ -38,6 +38,7 @@ type State = {
   tracks: Track[]
   latencyOffsetMs: number
   pxPerSec: number
+  beatsPerMeasure: number
 }
 
 type Action =
@@ -57,6 +58,7 @@ type Action =
   | { type: 'SET_PROJECT_NAME'; name: string }
   | { type: 'SET_LATENCY'; ms: number }
   | { type: 'SET_PX_PER_SEC'; pxPerSec: number }
+  | { type: 'SET_BEATS_PER_MEASURE'; beats: number }
   | { type: 'LOAD_PROJECT'; projectName: string; bpm: number; latencyOffsetMs: number; tracks: Track[] }
 
 const initial: State = {
@@ -69,6 +71,7 @@ const initial: State = {
   tracks: [],
   latencyOffsetMs: 0,
   pxPerSec: 100,
+  beatsPerMeasure: 4,
 }
 
 function reducer(state: State, action: Action): State {
@@ -105,6 +108,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, latencyOffsetMs: action.ms }
     case 'SET_PX_PER_SEC':
       return { ...state, pxPerSec: action.pxPerSec }
+    case 'SET_BEATS_PER_MEASURE':
+      return { ...state, beatsPerMeasure: Math.max(1, Math.min(16, action.beats)) }
     case 'LOAD_PROJECT':
       return {
         ...state,
@@ -274,12 +279,41 @@ export default function AudioPlusApp() {
     let beat = 0
     let x = SIDEBAR_WIDTH
     while (x < totalWidth) {
-      ctx.fillStyle = beat % 4 === 0 ? dimColor : ruleColor
+      ctx.fillStyle = beat % state.beatsPerMeasure === 0 ? dimColor : ruleColor
       ctx.fillRect(Math.round(x), 0, 1, totalHeight)
       x += beatInterval
       beat++
     }
-  }, [state.bpm, state.pxPerSec, state.tracks.length])
+  }, [state.bpm, state.pxPerSec, state.beatsPerMeasure, state.tracks.length])
+
+  // Spacebar always triggers transport (never activates focused buttons)
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== ' ') return
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      e.preventDefault()
+      if (state.phase === 'recording') {
+        handleStopRecord()
+        return
+      }
+      if (state.isPlaying) {
+        engineRef.current.stop()
+        dispatch({ type: 'SET_PLAYING', isPlaying: false })
+        dispatch({ type: 'SET_PLAYHEAD', time: 0 })
+      } else {
+        engineRef.current.play(
+          state.tracks.filter(t => buffersRef.current.has(t.id)).map(t => ({ ...t, buffer: buffersRef.current.get(t.id)! })),
+          state.bpm, state.metronomeOn,
+          (elapsed) => dispatch({ type: 'SET_PLAYHEAD', time: elapsed })
+        )
+        dispatch({ type: 'SET_PLAYING', isPlaying: true })
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isPlaying, state.phase, state.bpm, state.metronomeOn, state.tracks, state.latencyOffsetMs])
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -444,6 +478,14 @@ export default function AudioPlusApp() {
             min={20} max={300}
             onChange={e => dispatch({ type: 'SET_BPM', bpm: Number(e.target.value) })}
           />
+          <span className={styles.topLabel}>/</span>
+          <input
+            type="number"
+            className={styles.bpmInput}
+            value={state.beatsPerMeasure}
+            min={1} max={16}
+            onChange={e => dispatch({ type: 'SET_BEATS_PER_MEASURE', beats: Number(e.target.value) })}
+          />
           <button
             className={[styles.topBtn, state.metronomeOn ? styles.topBtnOn : ''].join(' ')}
             onClick={() => dispatch({ type: 'TOGGLE_METRONOME' })}
@@ -451,11 +493,10 @@ export default function AudioPlusApp() {
         </div>
         <div className={styles.zoomGroup}>
           <span className={styles.topLabel}>zoom</span>
-          <input
-            type="range" min={20} max={400} step={10}
+          <RangeSlider min={20} max={400} step={10}
             value={state.pxPerSec}
             className={styles.zoomSlider}
-            onChange={e => dispatch({ type: 'SET_PX_PER_SEC', pxPerSec: Number(e.target.value) })}
+            onChange={v => dispatch({ type: 'SET_PX_PER_SEC', pxPerSec: v })}
           />
         </div>
         <div className={styles.transport}>

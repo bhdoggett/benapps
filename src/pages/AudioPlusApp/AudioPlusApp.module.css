@@ -5,6 +5,7 @@
 .app {
   max-width: 100%;
   margin: 0 auto;
+  padding: 0 2rem;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -116,7 +117,6 @@
 
 .zoomSlider {
   width: 5rem;
-  accent-color: var(--muted);
 }
 
 .transportBtn {

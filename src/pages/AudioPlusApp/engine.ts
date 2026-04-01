@@ -148,7 +148,11 @@ export class AudioPlusEngine {
     metronomeOn: boolean,
     onTick: (elapsedSeconds: number) => void
   ): Promise<{ stream: MediaStream; startAt: number }> {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    // Disable echo cancellation and noise suppression so the browser doesn't
+    // process out the metronome or backing tracks from the mic capture.
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    })
     this.mediaStream = stream
     const startAt = this.play(tracks, bpm, metronomeOn, onTick)
 
