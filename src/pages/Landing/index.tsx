@@ -117,7 +117,7 @@ export default function Landing() {
         <p>
           Requests or feedback?{" "}
           <a
-            href="https://github.com/bhdoggett/underscoreapps/issues"
+            href="https://github.com/bhdoggett/_apps/issues"
             target="_blank"
             rel="noreferrer"
           >
@@ -127,7 +127,7 @@ export default function Landing() {
         <p>
           Want to contribute?{" "}
           <a
-            href="https://github.com/bhdoggett/underscoreapps/blob/main/CONTRIBUTING.md"
+            href="https://github.com/bhdoggett/_apps/blob/main/CONTRIBUTING.md"
             target="_blank"
             rel="noreferrer"
           >
