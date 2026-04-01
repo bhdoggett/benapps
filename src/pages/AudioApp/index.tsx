@@ -11,8 +11,8 @@ import {
   transformNormalize,
   trimBuffer,
 } from "./audioTransforms";
-import { encodeWAV } from "./wavEncoder";
-import { encodeMP3 } from "./mp3Encoder";
+import { encodeWAV } from "../../utils/audio/wavEncoder";
+import { encodeMP3 } from "../../utils/audio/mp3Encoder";
 import styles from "./AudioApp.module.css";
 
 type SpeedKey = "half" | "double";
