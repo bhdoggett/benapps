@@ -12,3 +12,16 @@ export function useIsLandscapeMobile(): boolean {
   }, [])
   return is
 }
+
+export function useIsMobile(): boolean {
+  const [is, setIs] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const media = window.matchMedia('(pointer: coarse)')
+    const update = () => setIs(media.matches)
+    update()
+    media.addEventListener?.('change', update)
+    return () => media.removeEventListener?.('change', update)
+  }, [])
+  return is
+}
