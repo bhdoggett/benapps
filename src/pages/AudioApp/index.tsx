@@ -911,28 +911,26 @@ export default function AudioApp() {
     </div>
   );
 
-  if (isLandscapeMobile) {
-    return <div className={styles.focusOverlay}>{inner}</div>;
-  }
-
   return (
-    <div className={styles.app}>
-      <AppHeader
-        title="audio"
-        about={
-          <>
-            <p>
-              Reverse, trim, or adjust the speed and volume of an audio file,
-              then export as WAV or MP3.
-            </p>
-            <ul>
-              <li>Drop a file anywhere on the page to load it</li>
-              <li>Toggle transforms in any combination before exporting</li>
-              <li>Trim uses the handles on the waveform display</li>
-            </ul>
-          </>
-        }
-      />
+    <div className={isLandscapeMobile ? styles.focusOverlay : styles.app}>
+      {!isLandscapeMobile && (
+        <AppHeader
+          title="audio"
+          about={
+            <>
+              <p>
+                Reverse, trim, or adjust the speed and volume of an audio file,
+                then export as WAV or MP3.
+              </p>
+              <ul>
+                <li>Drop a file anywhere on the page to load it</li>
+                <li>Toggle transforms in any combination before exporting</li>
+                <li>Trim uses the handles on the waveform display</li>
+              </ul>
+            </>
+          }
+        />
+      )}
       {inner}
     </div>
   );

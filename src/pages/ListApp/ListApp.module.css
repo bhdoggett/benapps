@@ -203,6 +203,12 @@
   color: var(--fg);
 }
 
+.iconBtnCheck {
+  display: inline-block;
+  width: 15px;
+  text-align: center;
+}
+
 /* ---- Add form ---- */
 
 .addForm {

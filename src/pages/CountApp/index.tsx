@@ -67,7 +67,6 @@ export default function CountApp() {
           <p>A single incrementing counter. Resets when you clear it.</p>
           <ul>
             <li>Tap + or − to increment or decrement</li>
-            <li>Drag the number up or down to change it quickly</li>
             <li>Hold the clear button to reset to zero</li>
           </ul>
         </>}

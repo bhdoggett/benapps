@@ -1,6 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import AppHeader from '../../components/AppHeader'
-import StatusMessage from '../../components/StatusMessage'
 import styles from './ListApp.module.css'
 
 const STORAGE_KEY = 'list_v1_items'
@@ -320,12 +319,15 @@ export default function ListApp() {
                     </svg>
                   </button>
                   <button className={styles.iconBtn} onClick={copyList} title="Copy to clipboard" aria-label="Copy list">
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="5" y="4" width="8" height="9" rx="1" />
-                      <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
-                    </svg>
+                    {copied ? (
+                      <span className={styles.iconBtnCheck}>✓</span>
+                    ) : (
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="5" y="4" width="8" height="9" rx="1" />
+                        <path d="M10 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1" />
+                      </svg>
+                    )}
                   </button>
-                  <StatusMessage message="copied!" visible={copied} />
                 </>
               )}
             </div>
