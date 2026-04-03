@@ -510,8 +510,7 @@ function CalibrationView({
   }
 
   return (
-    <div className={styles.calibOverlay}>
-      <div className={styles.calibBox}>
+    <div className={styles.calibBox}>
         {step === "intro" && (
           <>
             <div className={styles.calibTitle}>latency calibration</div>
@@ -582,6 +581,9 @@ function CalibrationView({
               >
                 reset
               </button>
+              <button className={styles.topBtn} onClick={onStart}>
+                try again
+              </button>
             </div>
             <p className={styles.calibHint}>
               drag waveform · beat-1 line is the leftmost marker
@@ -589,7 +591,6 @@ function CalibrationView({
           </>
         )}
       </div>
-    </div>
   );
 }
 
@@ -933,30 +934,52 @@ export default function AudioPlusApp() {
     input.click();
   }
 
+  // ── About content ─────────────────────────────────────────────────────────
+
+  const about = (
+    <>
+      <p>A multitrack audio recorder and mixer.</p>
+      <ul>
+        <li>Import audio files or record from your microphone</li>
+        <li>Drag tracks horizontally to reposition them on the timeline</li>
+        <li>Trim tracks using the handles at each edge</li>
+        <li>Set BPM and toggle the click track for recording reference</li>
+        <li>Adjust volume and pan per track with the sliders</li>
+        <li>Export the mix as WAV or MP3</li>
+        <li>Save and reload your project as a .audioplus file — all tracks preserved separately</li>
+        <li>Use headphones when recording to prevent feedback</li>
+        <li>Calibrate latency so recordings align with the grid — drag the ms offset to fine-tune, or run recalibrate to re-measure</li>
+      </ul>
+    </>
+  );
+
   // ── Calibration gate ──────────────────────────────────────────────────────
 
   if (!state.calibrated) {
     return (
-      <CalibrationView
-        step={state.calibrationStep}
-        bpm={CALIB_BPM}
-        beatsPerMeasure={CALIB_BEATS}
-        isRecording={state.phase === "recording"}
-        calibOffset={state.calibrationOffset}
-        calibBuffer={calibBufferRef.current}
-        onStart={
-          state.calibrationStep === "intro"
-            ? () =>
-                dispatch({ type: "SET_CALIBRATION_STEP", step: "recording" })
-            : handleCalibrationStart
-        }
-        onStop={handleCalibrationStop}
-        onOffsetChange={(offset) =>
-          dispatch({ type: "SET_CALIBRATION_OFFSET", offset })
-        }
-        onFinish={handleCalibrationFinish}
-        onSkip={() => dispatch({ type: "SKIP_CALIBRATION" })}
-      />
+      <div className={styles.app}>
+        <AppHeader title="audio+" about={about} />
+        <CalibrationView
+          step={state.calibrationStep}
+          bpm={CALIB_BPM}
+          beatsPerMeasure={CALIB_BEATS}
+          isRecording={state.phase === "recording"}
+          calibOffset={state.calibrationOffset}
+          calibBuffer={calibBufferRef.current}
+          onStart={
+            state.calibrationStep === "intro"
+              ? () =>
+                  dispatch({ type: "SET_CALIBRATION_STEP", step: "recording" })
+              : handleCalibrationStart
+          }
+          onStop={handleCalibrationStop}
+          onOffsetChange={(offset) =>
+            dispatch({ type: "SET_CALIBRATION_OFFSET", offset })
+          }
+          onFinish={handleCalibrationFinish}
+          onSkip={() => dispatch({ type: "SKIP_CALIBRATION" })}
+        />
+      </div>
     );
   }
 
@@ -1141,23 +1164,6 @@ export default function AudioPlusApp() {
         </div>
       </div>
     </div>
-  );
-
-  const about = (
-    <>
-      <p>A multitrack audio recorder and mixer.</p>
-      <ul>
-        <li>Import audio files or record from your microphone</li>
-        <li>Drag tracks horizontally to reposition them on the timeline</li>
-        <li>Trim tracks using the handles at each edge</li>
-        <li>Set BPM and toggle the click track for recording reference</li>
-        <li>Adjust volume and pan per track with the sliders</li>
-        <li>Export the mix as WAV or MP3</li>
-        <li>Save and reload your project as a .audioplus file — all tracks preserved separately</li>
-        <li>Use headphones when recording to prevent feedback</li>
-        <li>Calibrate latency so recordings align with the grid — drag the ms offset to fine-tune, or run recalibrate to re-measure</li>
-      </ul>
-    </>
   );
 
   if (isPortraitMobile) {

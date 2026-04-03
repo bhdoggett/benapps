@@ -8,7 +8,8 @@
 
 .inner {
   max-width: 480px;
-  margin: 0 auto;
+  margin: 0rem auto;
+  padding: 0rem 1.5rem;
   width: 100%;
 }
 
@@ -54,6 +55,7 @@
   cursor: text;
   -webkit-appearance: none;
   -moz-appearance: textfield;
+  appearance: none;
 }
 
 .prefixInput::placeholder {
