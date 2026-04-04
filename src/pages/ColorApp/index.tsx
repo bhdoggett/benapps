@@ -672,9 +672,9 @@ export default function ColorApp() {
 
   const [fullscreen, setFullscreen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [activeExport, setActiveExport] = useState<"code" | "jpg" | "png" | "webp" | null>(null)
-  const [customW, setCustomW] = useState(1920)
-  const [customH, setCustomH] = useState(1080)
+  const [activeExport, setActiveExport] = useState<"code" | "jpg" | "png" | "webp" | null>(null);
+  const [customW, setCustomW] = useState(1920);
+  const [customH, setCustomH] = useState(1080);
 
   // Keep URL hash in sync with gradient state (debounced to avoid replaceState rate limit)
   useEffect(() => {
@@ -1067,19 +1067,19 @@ export default function ColorApp() {
     state.soloGroup !== null ? [state.groups[state.soloGroup]] : state.groups;
 
   function handleExportClick(fmt: "code" | "jpg" | "png" | "webp") {
-    setActiveExport(fmt)
+    setActiveExport(fmt);
     if (fmt === "code") {
       navigator.clipboard.writeText(gradCss).then(() => {
-        dispatch({ type: "SET_GRADIENT_COPIED", value: true })
-        setTimeout(() => dispatch({ type: "SET_GRADIENT_COPIED", value: false }), 1200)
-      })
+        dispatch({ type: "SET_GRADIENT_COPIED", value: true });
+        setTimeout(() => dispatch({ type: "SET_GRADIENT_COPIED", value: false }), 1200);
+      });
     }
   }
 
   function handleDownload(fmt: "jpg" | "png" | "webp", w: number, h: number) {
-    const format = fmt === "jpg" ? "jpeg" : fmt
-    const canvas = renderGroupsToCanvas(previewGroups, w, h)
-    downloadCanvas(canvas, format as "png" | "jpeg" | "webp", "gradient")
+    const format = fmt === "jpg" ? "jpeg" : fmt;
+    const canvas = renderGroupsToCanvas(previewGroups, w, h);
+    downloadCanvas(canvas, format, "gradient");
   }
 
   return (
@@ -1867,7 +1867,7 @@ export default function ColorApp() {
                 value={customW}
                 min={1}
                 max={7680}
-                onChange={(e) => setCustomW(Number(e.target.value))}
+                onChange={(e) => setCustomW(Math.max(1, parseInt(e.target.value, 10) || 1))}
               />
               <span className={styles.dimSep}>×</span>
               <input
@@ -1876,7 +1876,7 @@ export default function ColorApp() {
                 value={customH}
                 min={1}
                 max={7680}
-                onChange={(e) => setCustomH(Number(e.target.value))}
+                onChange={(e) => setCustomH(Math.max(1, parseInt(e.target.value, 10) || 1))}
               />
               <button
                 className={styles.uploadLink}
