@@ -312,6 +312,7 @@
 .addToGradientRow {
   display: flex;
   justify-content: center;
+  gap: 0.75rem;
   margin-bottom: 2rem;
 }
 
@@ -610,10 +611,20 @@
 }
 
 .radialControls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+  align-items: center;
   padding-top: 0.2rem;
+}
+
+.radialControls .angleLabel {
+  display: contents;
+}
+
+.radialControls .angleLabel > :first-child {
+  text-align: right;
 }
 
 /* Layer tabs */
@@ -722,6 +733,7 @@
 .layerTabEyeActive {
   opacity: 1;
 }
+
 
 /* CSS output */
 .cssOutput {

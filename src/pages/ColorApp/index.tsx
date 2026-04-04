@@ -50,7 +50,7 @@ type State = {
   copying: string | null;
   groups: GradientGroup[];
   activeGroup: number;
-  soloGroup: number | null;
+  soloGroups: number[];
   gradientCopied: boolean;
   alpha: number;
 };
@@ -81,7 +81,7 @@ type Action =
   | { type: "ADD_GROUP_WITH_COLOR"; hex: string; alpha: number }
   | { type: "REMOVE_GROUP"; index: number }
   | { type: "SET_ACTIVE_GROUP"; index: number }
-  | { type: "SET_SOLO_GROUP"; index: number | null }
+  | { type: "TOGGLE_SOLO_GROUP"; index: number }
   | { type: "SET_GROUP_OPACITY"; index: number; value: number }
   | { type: "LOAD_GROUPS"; groups: GradientGroup[] }
   | { type: "REORDER_GROUPS"; from: number; to: number };
@@ -181,7 +181,7 @@ const initial: State = {
   copying: null,
   groups: [{ ...defaultGroup }],
   activeGroup: 0,
-  soloGroup: null,
+  soloGroups: [],
   gradientCopied: false,
   alpha: 100,
 };
@@ -335,18 +335,19 @@ function reducer(state: State, action: Action): State {
       if (state.groups.length <= 1) return state;
       const groups = state.groups.filter((_, i) => i !== action.index);
       const activeGroup = Math.min(state.activeGroup, groups.length - 1);
-      const soloGroup =
-        state.soloGroup === action.index
-          ? null
-          : state.soloGroup !== null && state.soloGroup > action.index
-            ? state.soloGroup - 1
-            : state.soloGroup;
-      return { ...state, groups, activeGroup, soloGroup };
+      const soloGroups = state.soloGroups
+        .filter((i) => i !== action.index)
+        .map((i) => (i > action.index ? i - 1 : i));
+      return { ...state, groups, activeGroup, soloGroups };
     }
     case "SET_ACTIVE_GROUP":
       return { ...state, activeGroup: action.index };
-    case "SET_SOLO_GROUP":
-      return { ...state, soloGroup: action.index };
+    case "TOGGLE_SOLO_GROUP": {
+      const soloGroups = state.soloGroups.includes(action.index)
+        ? state.soloGroups.filter((i) => i !== action.index)
+        : [...state.soloGroups, action.index];
+      return { ...state, soloGroups };
+    }
     case "SET_GROUP_OPACITY": {
       const groups = state.groups.map((g, i) =>
         i === action.index
@@ -360,7 +361,7 @@ function reducer(state: State, action: Action): State {
         ...state,
         groups: action.groups,
         activeGroup: 0,
-        soloGroup: null,
+        soloGroups: [],
       };
     case "REORDER_GROUPS": {
       const groups = [...state.groups];
@@ -1064,7 +1065,9 @@ export default function ColorApp() {
 
   const gradCss = gradientCss(state);
   const previewGroups =
-    state.soloGroup !== null ? [state.groups[state.soloGroup]] : state.groups;
+    state.soloGroups.length > 0
+      ? state.groups.filter((_, i) => state.soloGroups.includes(i))
+      : state.groups;
 
   function handleExportClick(fmt: "code" | "jpg" | "png" | "webp") {
     setActiveExport(fmt);
@@ -1273,42 +1276,25 @@ export default function ColorApp() {
               <button
                 className={[
                   styles.layerTabEye,
-                  state.soloGroup === i ? styles.layerTabEyeActive : "",
+                  state.soloGroups.includes(i) ? styles.layerTabEyeActive : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                title={
-                  state.soloGroup === i ? "show all layers" : "focus this layer"
-                }
+                title={state.soloGroups.includes(i) ? "remove from solo" : "solo this layer"}
                 onClick={(e) => {
                   e.stopPropagation();
-                  dispatch({ type: "SET_ACTIVE_GROUP", index: i });
-                  dispatch({
-                    type: "SET_SOLO_GROUP",
-                    index: state.soloGroup === i ? null : i,
-                  });
+                  dispatch({ type: "TOGGLE_SOLO_GROUP", index: i });
                 }}
               >
-                {state.soloGroup === i ? (
-                  <svg
-                    viewBox="0 0 16 16"
-                    width="10"
-                    height="10"
-                    fill="currentColor"
-                  >
-                    <path d="M8 3C4.5 3 1.5 5.5 0 8c1.5 2.5 4.5 5 8 5s6.5-2.5 8-5c-1.5-2.5-4.5-5-8-5zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-                  </svg>
-                ) : (
-                  <svg
-                    viewBox="0 0 16 16"
-                    width="10"
-                    height="10"
-                    fill="currentColor"
-                    opacity="0.4"
-                  >
-                    <path d="M8 3C4.5 3 1.5 5.5 0 8c1.5 2.5 4.5 5 8 5s6.5-2.5 8-5c-1.5-2.5-4.5-5-8-5zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-                  </svg>
-                )}
+                <svg
+                  viewBox="0 0 16 16"
+                  width="10"
+                  height="10"
+                  fill="currentColor"
+                  opacity={state.soloGroups.includes(i) ? 1 : 0.4}
+                >
+                  <path d="M8 3C4.5 3 1.5 5.5 0 8c1.5 2.5 4.5 5 8 5s6.5-2.5 8-5c-1.5-2.5-4.5-5-8-5zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+                </svg>
               </button>
               <span
                 className={styles.layerDragHandle}
