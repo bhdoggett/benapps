@@ -47,6 +47,11 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--dim); }
 
+button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
 .hidden {
   display: none;
 }

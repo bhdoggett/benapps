@@ -286,6 +286,7 @@ export default function DrawApp() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const isDrawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  const lastMid = useRef<{ x: number; y: number } | null>(null)
   const historyRef = useRef<HistoryEntry[]>([])
   const historyIndexRef = useRef(-1)
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -488,11 +489,21 @@ export default function DrawApp() {
     }
   }
 
+  const getCanvasPosFromNative = (e: PointerEvent) => {
+    const canvas = canvasRef.current!
+    const rect = canvas.getBoundingClientRect()
+    return {
+      x: Math.round((e.clientX - rect.left) * (stateRef.current.canvasW / rect.width)),
+      y: Math.round((e.clientY - rect.top) * (stateRef.current.canvasH / rect.height)),
+    }
+  }
+
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     isDrawing.current = true
     const pos = getCanvasPos(e)
     lastPos.current = pos
+    lastMid.current = pos
 
     // Draw a dot on tap/click (no movement needed)
     const canvas = canvasRef.current
@@ -509,33 +520,42 @@ export default function DrawApp() {
   }
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawing.current || !lastPos.current) return
+    if (!isDrawing.current || !lastPos.current || !lastMid.current) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     const { color, brushSize } = stateRef.current
-    const pos = getCanvasPos(e)
+    // Use coalesced events to recover intermediate positions skipped between frames
+    const points = (e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent])
+      .map(getCanvasPosFromNative)
 
     ctx.save()
-    ctx.beginPath()
-    ctx.moveTo(lastPos.current.x, lastPos.current.y)
-    ctx.lineTo(pos.x, pos.y)
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.globalCompositeOperation = 'source-over'
     ctx.lineWidth = brushSize
     ctx.strokeStyle = color
-    ctx.stroke()
+
+    for (const pos of points) {
+      const mid = { x: (lastPos.current.x + pos.x) / 2, y: (lastPos.current.y + pos.y) / 2 }
+      ctx.beginPath()
+      ctx.moveTo(lastMid.current.x, lastMid.current.y)
+      ctx.quadraticCurveTo(lastPos.current.x, lastPos.current.y, mid.x, mid.y)
+      ctx.stroke()
+      lastMid.current = mid
+      lastPos.current = pos
+    }
+
     ctx.restore()
-    lastPos.current = pos
   }
 
   const handlePointerUp = () => {
     if (!isDrawing.current) return
     isDrawing.current = false
     lastPos.current = null
+    lastMid.current = null
     // Capture post-stroke state (one snapshot per stroke).
     saveHistory()
   }
@@ -807,6 +827,8 @@ export default function DrawApp() {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
+          onContextMenu={(e) => e.preventDefault()}
+          onDoubleClick={(e) => e.preventDefault()}
         />
         {isResizing && (
           <div
