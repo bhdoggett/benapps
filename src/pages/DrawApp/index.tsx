@@ -781,8 +781,12 @@ export default function DrawApp() {
               step={10}
               pixelsPerUnit={1}
               className={styles.canvasSizeInput}
-              onChange={(v) => dispatch({ type: 'SET_CANVAS_W', w: v })}
-              onCommit={(v) => commitResize(v, state.canvasH)}
+              onChange={(v) => {
+                resizeAnchorRef.current = { x: 0, y: 0 }
+                setIsResizing(true)
+                dispatch({ type: 'SET_CANVAS_W', w: v })
+              }}
+              onCommit={(v) => { setIsResizing(false); commitResize(v, state.canvasH) }}
             />
             <span className={styles.label}>×</span>
             <DragNumber
@@ -792,8 +796,12 @@ export default function DrawApp() {
               step={10}
               pixelsPerUnit={1}
               className={styles.canvasSizeInput}
-              onChange={(v) => dispatch({ type: 'SET_CANVAS_H', h: v })}
-              onCommit={(v) => commitResize(state.canvasW, v)}
+              onChange={(v) => {
+                resizeAnchorRef.current = { x: 0, y: 0 }
+                setIsResizing(true)
+                dispatch({ type: 'SET_CANVAS_H', h: v })
+              }}
+              onCommit={(v) => { setIsResizing(false); commitResize(state.canvasW, v) }}
             />
           </div>
           <div className={styles.cropCol}>
