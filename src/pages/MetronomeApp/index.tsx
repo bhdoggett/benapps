@@ -156,10 +156,11 @@ export default function MetronomeApp() {
         <button
           className={styles.controlBtn}
           onClick={running ? stopMetronome : startMetronome}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {running ? "stop" : "start"}
         </button>
-        <button className={styles.controlBtn} onClick={handleTap}>
+        <button className={styles.controlBtn} onClick={handleTap} onContextMenu={(e) => e.preventDefault()}>
           tap
         </button>
       </div>
@@ -168,6 +169,7 @@ export default function MetronomeApp() {
         <button
           className={styles.adjBtn}
           onClick={() => adjustBpm(-1)}
+          onContextMenu={(e) => e.preventDefault()}
           aria-label="decrease BPM"
         >
           −
@@ -186,6 +188,7 @@ export default function MetronomeApp() {
         <button
           className={styles.adjBtn}
           onClick={() => adjustBpm(1)}
+          onContextMenu={(e) => e.preventDefault()}
           aria-label="increase BPM"
         >
           +
@@ -213,6 +216,7 @@ export default function MetronomeApp() {
           <button
             className={styles.adjBtn}
             onClick={() => setBeats((b) => Math.max(1, b - 1))}
+            onContextMenu={(e) => e.preventDefault()}
             aria-label="decrease beats"
           >
             −
@@ -229,6 +233,7 @@ export default function MetronomeApp() {
           <button
             className={styles.adjBtn}
             onClick={() => setBeats((b) => Math.min(8, b + 1))}
+            onContextMenu={(e) => e.preventDefault()}
             aria-label="increase beats"
           >
             +
